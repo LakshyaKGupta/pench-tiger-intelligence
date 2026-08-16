@@ -28,12 +28,12 @@ from app.ingestion.scanner import scan_dataset
 from app.ingestion.validator import validate_image_batch
 from app.occupancy.mcp import calculate_tiger_home_range
 from app.privacy.protector import apply_privacy_blur, quarantine_human_frame
-from app.reid.extractor import TigerStripeFeatureExtractor
-from app.reid.flank_crop import crop_tiger_flank
+from app.reid.extractor import DEFAULT_REID_MODEL, TigerStripeFeatureExtractor
+from app.reid.flank_crop import generate_flank_candidates, crop_tiger_flank
 from app.reid.matcher import TigerReIDMatcher
 from app.species.classifier import SpeciesClassifier
 
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 
 
 class TigerIntelligencePipeline:
@@ -45,7 +45,7 @@ class TigerIntelligencePipeline:
         detector_model: Optional[str] = None,
         species_model_a: Optional[str] = None,
         species_model_b: Optional[str] = None,
-        reid_backbone: str = "convnext_tiny",
+        reid_backbone: str = DEFAULT_REID_MODEL,
         batch_size: int = 16,
     ):
         proj_root = Path(__file__).resolve().parent.parent
@@ -290,29 +290,36 @@ class TigerIntelligencePipeline:
         print(f"  Confirmed Tigers: {len(tiger_records)} | Non-Target Wildlife: {len(non_target_records)}")
 
         # ── Step 7: Individual Tiger Re-ID, Flank Matching & Alert Engine ──────
-        print(f"\n► Step 7/7: Extracting flank stripe patterns & matching tiger identities …")
+        print(f"\n► Step 7/7: Extracting flank stripe patterns & matching tiger identities (MegaDescriptor) …")
         reid_matches = []
         all_generated_alerts = []
 
         for rec, sp in tiger_records:
-            crop_path, crop_arr, flank_orientation = crop_tiger_flank(
+            # 1. Deterministic Dual Flank / Body Candidate Extraction
+            candidates = generate_flank_candidates(
                 image_path=rec["original_path"],
                 bbox_xyxy=sp.bbox_xyxy,
                 output_crop_dir=f"{output_base_dir}/processed/crops"
             )
 
-            # Extract visual stripe embedding
-            embedding = self.reid_extractor.extract_embedding(crop_arr)
+            # 2. Extract wildlife embeddings for each candidate crop
+            candidate_embeddings = [
+                (c.crop_type, self.reid_extractor.extract_embedding(c.crop_array))
+                for c in candidates
+            ]
 
-            # Match against SQLite reference catalog
-            known_catalogue = self.db.get_tiger_embeddings()
-            match_res = self.reid_matcher.match(
-                query_embedding=embedding,
-                reference_catalog=known_catalogue,
-                flank_orientation=flank_orientation,
+            # Primary crop for UI / detection record
+            primary_crop = candidates[0] if candidates else None
+            primary_crop_path = primary_crop.crop_path if primary_crop else None
+
+            # 3. Match against multi-reference individual gallery
+            reference_gallery = self.db.get_tiger_reference_gallery()
+            match_res = self.reid_matcher.match_candidates(
+                query_candidate_embeddings=candidate_embeddings,
+                reference_gallery=reference_gallery,
             )
 
-            # Assign or Register Tiger ID
+            # 4. Assign or Register Tiger ID
             if match_res.is_new_individual:
                 new_idx = len(self.db.get_all_tigers()) + 1
                 assigned_tiger_id = f"T-PENCH-{new_idx:03d}"
@@ -320,13 +327,31 @@ class TigerIntelligencePipeline:
                     tiger_id=assigned_tiger_id,
                     name=f"Pench Tiger {assigned_tiger_id}",
                     reference_image_path=rec["original_path"],
-                    embedding=embedding,
-                    flank_side=flank_orientation if flank_orientation != "ambiguous" else "both",
+                    embedding=candidate_embeddings[0][1] if candidate_embeddings else None,
+                    flank_side="both",
                     notes="Auto-discovered individual from field camera traps",
                 )
+                # Store all candidate embeddings in gallery
+                for c_type, emb in candidate_embeddings:
+                    self.db.add_reference_embedding(
+                        tiger_id=assigned_tiger_id,
+                        embedding=emb,
+                        crop_type=c_type,
+                        source_crop_path=primary_crop_path,
+                        encounter_image_id=rec["image_id"],
+                    )
                 print(f"  ✦ [NEW INDIVIDUAL DISCOVERED] Assigned ID: {assigned_tiger_id}")
             else:
                 assigned_tiger_id = match_res.matched_tiger_id
+                # Enrich reference gallery with high-confidence sightings
+                if match_res.confidence_level == "HIGH" and candidate_embeddings:
+                    self.db.add_reference_embedding(
+                        tiger_id=assigned_tiger_id,
+                        embedding=candidate_embeddings[0][1],
+                        crop_type=match_res.selected_crop_type,
+                        source_crop_path=primary_crop_path,
+                        encounter_image_id=rec["image_id"],
+                    )
                 print(f"  ★ [TIGER MATCHED] File: {rec['file_name']} -> {assigned_tiger_id} ({match_res.confidence_level}, Sim={match_res.similarity_score:.1%})")
 
             # Update image status to tiger confirmed
@@ -357,8 +382,8 @@ class TigerIntelligencePipeline:
                 detected_species="tiger",
                 species_confidence=sp.tiger_confidence,
                 bbox=sp.bbox_xyxy,
-                crop_path=crop_path,
-                flank_orientation=flank_orientation,
+                crop_path=primary_crop_path,
+                flank_orientation=match_res.selected_crop_type,
                 reid_matched_tiger_id=assigned_tiger_id,
                 reid_similarity=match_res.similarity_score,
                 reid_confidence_level=match_res.confidence_level,

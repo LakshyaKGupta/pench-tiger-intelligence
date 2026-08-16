@@ -35,6 +35,18 @@ CREATE TABLE IF NOT EXISTS tigers (
     notes TEXT
 );
 
+-- 2b. Multi-Reference Embeddings per Individual (Multi-Pose / Multi-Encounter Gallery)
+CREATE TABLE IF NOT EXISTS tiger_reference_embeddings (
+    embedding_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tiger_id TEXT NOT NULL,
+    encounter_image_id TEXT,
+    crop_type TEXT DEFAULT 'flank',     -- 'left_candidate', 'right_candidate', 'body_candidate'
+    embedding BLOB NOT NULL,            -- 768-dim Float32 serialized array
+    source_crop_path TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tiger_id) REFERENCES tigers(tiger_id)
+);
+
 -- 3. Raw Camera Trap Images & Ingestion Records
 CREATE TABLE IF NOT EXISTS images (
     image_id TEXT PRIMARY KEY,
@@ -70,7 +82,7 @@ CREATE TABLE IF NOT EXISTS detections (
     bbox_x2 REAL,
     bbox_y2 REAL,
     crop_path TEXT,
-    flank_orientation TEXT,             -- 'left', 'right', 'ambiguous'
+    flank_orientation TEXT,             -- 'left_candidate', 'right_candidate', 'body_candidate'
     reid_matched_tiger_id TEXT,
     reid_similarity REAL DEFAULT 0.0,
     reid_confidence_level TEXT,         -- 'HIGH', 'MEDIUM_REVIEW_REQUIRED', 'LOW_NEW_INDIVIDUAL'

@@ -110,31 +110,87 @@ class TigerDatabase:
             reference_image_path=COALESCE(excluded.reference_image_path, tigers.reference_image_path),
             total_sightings=tigers.total_sightings + 1
         """
-        emb_left = emb_bytes if flank_side in ("left", "both") else None
-        emb_right = emb_bytes if flank_side in ("right", "both") else None
+        emb_left = emb_bytes if flank_side in ("left", "left_candidate", "both") else None
+        emb_right = emb_bytes if flank_side in ("right", "right_candidate", "both") else None
 
         with self._get_connection() as conn:
             conn.execute(sql, (tiger_id, name or tiger_id, gender, estimated_age, flank_side, emb_left, emb_right, reference_image_path, notes))
+
+        # Also insert into multi-reference gallery if embedding provided
+        if embedding is not None:
+            self.add_reference_embedding(
+                tiger_id=tiger_id,
+                embedding=embedding,
+                crop_type=flank_side,
+                source_crop_path=reference_image_path,
+            )
+
+    def add_reference_embedding(
+        self,
+        tiger_id: str,
+        embedding: np.ndarray,
+        crop_type: str = "flank",
+        source_crop_path: Optional[str] = None,
+        encounter_image_id: Optional[str] = None,
+    ):
+        """Add an embedding to the individual's multi-reference gallery."""
+        emb_bytes = embedding.astype(np.float32).tobytes()
+        sql = """
+        INSERT INTO tiger_reference_embeddings (
+            tiger_id, encounter_image_id, crop_type, embedding, source_crop_path
+        ) VALUES (?, ?, ?, ?, ?)
+        """
+        with self._get_connection() as conn:
+            conn.execute(sql, (tiger_id, encounter_image_id, crop_type, emb_bytes, source_crop_path))
 
     def get_all_tigers(self) -> List[dict]:
         with self._get_connection() as conn:
             rows = conn.execute("SELECT * FROM tigers ORDER BY tiger_id").fetchall()
             return [dict(r) for r in rows]
 
-    def get_tiger_embeddings(self) -> List[Tuple[str, np.ndarray, str]]:
-        """Return list of (tiger_id, numpy_embedding, flank_side)."""
+    def get_tiger_reference_gallery(self) -> List[Dict]:
+        """
+        Return list of all reference embeddings in the gallery:
+        [
+            {
+                'tiger_id': 'T-001',
+                'embedding': np.ndarray(768,),
+                'crop_type': 'left_candidate',
+                'source_crop_path': '...'
+            },
+            ...
+        ]
+        """
         results = []
         with self._get_connection() as conn:
-            rows = conn.execute("SELECT tiger_id, reference_embedding_left, reference_embedding_right FROM tigers").fetchall()
+            rows = conn.execute("SELECT tiger_id, crop_type, embedding, source_crop_path FROM tiger_reference_embeddings").fetchall()
             for r in rows:
+                arr = np.frombuffer(r["embedding"], dtype=np.float32)
+                results.append({
+                    "tiger_id": r["tiger_id"],
+                    "embedding": arr,
+                    "crop_type": r["crop_type"],
+                    "source_crop_path": r["source_crop_path"],
+                })
+
+        # Fallback to master tigers table if multi-reference table is empty
+        if not results:
+            master_rows = conn.execute("SELECT tiger_id, reference_embedding_left, reference_embedding_right, reference_image_path FROM tigers").fetchall()
+            for r in master_rows:
                 tid = r["tiger_id"]
                 if r["reference_embedding_left"]:
                     arr = np.frombuffer(r["reference_embedding_left"], dtype=np.float32)
-                    results.append((tid, arr, "left"))
+                    results.append({"tiger_id": tid, "embedding": arr, "crop_type": "left_candidate", "source_crop_path": r["reference_image_path"]})
                 if r["reference_embedding_right"]:
                     arr = np.frombuffer(r["reference_embedding_right"], dtype=np.float32)
-                    results.append((tid, arr, "right"))
+                    results.append({"tiger_id": tid, "embedding": arr, "crop_type": "right_candidate", "source_crop_path": r["reference_image_path"]})
+
         return results
+
+    def get_tiger_embeddings(self) -> List[Tuple[str, np.ndarray, str]]:
+        """Backward-compatible tuple return: (tiger_id, embedding, flank_side)."""
+        gallery = self.get_tiger_reference_gallery()
+        return [(g["tiger_id"], g["embedding"], g["crop_type"]) for g in gallery]
 
     def update_tiger_occupancy(
         self,
@@ -208,7 +264,7 @@ class TigerDatabase:
         species_confidence: float,
         bbox: Optional[Tuple[float, float, float, float]] = None,
         crop_path: Optional[str] = None,
-        flank_orientation: str = "ambiguous",
+        flank_orientation: str = "body_candidate",
         reid_matched_tiger_id: Optional[str] = None,
         reid_similarity: float = 0.0,
         reid_confidence_level: str = "NONE",
