@@ -1,0 +1,20 @@
+{
+  "benchmark_type": "HELD_OUT_EVALUATION",
+  "dataset_name": "ATRW_Amur_Tiger_ReID",
+  "gallery_individuals": 10,
+  "gallery_images": 40,
+  "held_out_known_queries": 40,
+  "held_out_unknown_queries": 20,
+  "rank1_accuracy_percent": 100.0,
+  "top3_accuracy_percent": 100.0,
+  "unknown_rejection_rate_percent": 100.0,
+  "false_match_rate_percent": 0.0,
+  "human_review_routing_rate_percent": 0.0,
+  "similarity_stats": {
+    "same_individual_mean": 0.9296,
+    "same_individual_min": 0.7803,
+    "diff_individual_mean": 0.1108,
+    "diff_individual_max": 0.3129,
+    "unknown_max": 0.3171
+  }
+}

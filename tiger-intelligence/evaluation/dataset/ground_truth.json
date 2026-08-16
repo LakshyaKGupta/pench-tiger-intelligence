@@ -1,0 +1,362 @@
+[
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-001/002009.jpg",
+    "true_tiger_id": "T-001",
+    "is_known": true,
+    "atrw_id": 153
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-001/000187.jpg",
+    "true_tiger_id": "T-001",
+    "is_known": true,
+    "atrw_id": 153
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-001/002320.jpg",
+    "true_tiger_id": "T-001",
+    "is_known": true,
+    "atrw_id": 153
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-001/002992.jpg",
+    "true_tiger_id": "T-001",
+    "is_known": true,
+    "atrw_id": 153
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-002/003926.jpg",
+    "true_tiger_id": "T-002",
+    "is_known": true,
+    "atrw_id": 160
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-002/002149.jpg",
+    "true_tiger_id": "T-002",
+    "is_known": true,
+    "atrw_id": 160
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-002/003817.jpg",
+    "true_tiger_id": "T-002",
+    "is_known": true,
+    "atrw_id": 160
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-002/001797.jpg",
+    "true_tiger_id": "T-002",
+    "is_known": true,
+    "atrw_id": 160
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-003/002546.jpg",
+    "true_tiger_id": "T-003",
+    "is_known": true,
+    "atrw_id": 154
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-003/004325.jpg",
+    "true_tiger_id": "T-003",
+    "is_known": true,
+    "atrw_id": 154
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-003/004501.jpg",
+    "true_tiger_id": "T-003",
+    "is_known": true,
+    "atrw_id": 154
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-003/003896.jpg",
+    "true_tiger_id": "T-003",
+    "is_known": true,
+    "atrw_id": 154
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-004/004549.jpg",
+    "true_tiger_id": "T-004",
+    "is_known": true,
+    "atrw_id": 246
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-004/003134.jpg",
+    "true_tiger_id": "T-004",
+    "is_known": true,
+    "atrw_id": 246
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-004/001595.jpg",
+    "true_tiger_id": "T-004",
+    "is_known": true,
+    "atrw_id": 246
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-004/001964.jpg",
+    "true_tiger_id": "T-004",
+    "is_known": true,
+    "atrw_id": 246
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-005/000179.jpg",
+    "true_tiger_id": "T-005",
+    "is_known": true,
+    "atrw_id": 243
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-005/000173.jpg",
+    "true_tiger_id": "T-005",
+    "is_known": true,
+    "atrw_id": 243
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-005/002315.jpg",
+    "true_tiger_id": "T-005",
+    "is_known": true,
+    "atrw_id": 243
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-005/004050.jpg",
+    "true_tiger_id": "T-005",
+    "is_known": true,
+    "atrw_id": 243
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-006/000921.jpg",
+    "true_tiger_id": "T-006",
+    "is_known": true,
+    "atrw_id": 136
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-006/003677.jpg",
+    "true_tiger_id": "T-006",
+    "is_known": true,
+    "atrw_id": 136
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-006/000754.jpg",
+    "true_tiger_id": "T-006",
+    "is_known": true,
+    "atrw_id": 136
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-006/001523.jpg",
+    "true_tiger_id": "T-006",
+    "is_known": true,
+    "atrw_id": 136
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-007/003940.jpg",
+    "true_tiger_id": "T-007",
+    "is_known": true,
+    "atrw_id": 265
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-007/003779.jpg",
+    "true_tiger_id": "T-007",
+    "is_known": true,
+    "atrw_id": 265
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-007/001373.jpg",
+    "true_tiger_id": "T-007",
+    "is_known": true,
+    "atrw_id": 265
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-007/001217.jpg",
+    "true_tiger_id": "T-007",
+    "is_known": true,
+    "atrw_id": 265
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-008/003254.jpg",
+    "true_tiger_id": "T-008",
+    "is_known": true,
+    "atrw_id": 237
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-008/004997.jpg",
+    "true_tiger_id": "T-008",
+    "is_known": true,
+    "atrw_id": 237
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-008/001392.jpg",
+    "true_tiger_id": "T-008",
+    "is_known": true,
+    "atrw_id": 237
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-008/001781.jpg",
+    "true_tiger_id": "T-008",
+    "is_known": true,
+    "atrw_id": 237
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-009/001618.jpg",
+    "true_tiger_id": "T-009",
+    "is_known": true,
+    "atrw_id": 249
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-009/004619.jpg",
+    "true_tiger_id": "T-009",
+    "is_known": true,
+    "atrw_id": 249
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-009/001224.jpg",
+    "true_tiger_id": "T-009",
+    "is_known": true,
+    "atrw_id": 249
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-009/005125.jpg",
+    "true_tiger_id": "T-009",
+    "is_known": true,
+    "atrw_id": 249
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-010/004851.jpg",
+    "true_tiger_id": "T-010",
+    "is_known": true,
+    "atrw_id": 247
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-010/002543.jpg",
+    "true_tiger_id": "T-010",
+    "is_known": true,
+    "atrw_id": 247
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-010/002324.jpg",
+    "true_tiger_id": "T-010",
+    "is_known": true,
+    "atrw_id": 247
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/query/T-010/003960.jpg",
+    "true_tiger_id": "T-010",
+    "is_known": true,
+    "atrw_id": 247
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_001/001653.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 172
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_001/000154.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 172
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_001/000281.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 172
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_001/004493.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 172
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_002/000447.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 261
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_002/000227.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 261
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_002/004526.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 261
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_002/002762.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 261
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_003/002681.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 168
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_003/001478.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 168
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_003/003971.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 168
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_003/003265.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 168
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_004/001173.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 268
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_004/003273.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 268
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_004/000314.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 268
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_004/003621.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 268
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_005/003370.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 264
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_005/003551.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 264
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_005/000634.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 264
+  },
+  {
+    "query_path": "tiger-intelligence/evaluation/dataset/unknown/unknown_005/002883.jpg",
+    "true_tiger_id": null,
+    "is_known": false,
+    "atrw_id": 264
+  }
+]

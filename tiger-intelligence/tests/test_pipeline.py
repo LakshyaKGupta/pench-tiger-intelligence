@@ -170,6 +170,19 @@ class TestTigerIntelligence(unittest.TestCase):
         if db_path.exists():
             db_path.unlink()
 
+    def test_held_out_dataset_integrity(self):
+        from evaluation.evaluate_reid import verify_dataset_integrity
+        base_dir = Path("tiger-intelligence/evaluation/dataset")
+        if (base_dir / "gallery").exists() and (base_dir / "query").exists():
+            gal_dict, known_q, unk_q = verify_dataset_integrity(
+                base_dir / "gallery",
+                base_dir / "query",
+                base_dir / "unknown",
+            )
+            self.assertGreater(len(gal_dict), 0, "Gallery must contain known individuals")
+            self.assertGreater(len(known_q), 0, "Query set must contain held-out known images")
+            self.assertGreater(len(unk_q), 0, "Unknown query set must contain unseen individuals")
+
 
 if __name__ == "__main__":
     unittest.main()
