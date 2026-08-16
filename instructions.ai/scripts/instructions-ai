@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""
+instructions-ai — Global AI Operating System CLI
+=================================================
+A professional CLI to bootstrap projects, manage technical skills,
+and sync agent rules across all your active workspaces.
+
+Usage:
+  instructions-ai init /path/to/project
+  instructions-ai skills
+  instructions-ai sync
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+
+ROOT = "/Users/lol/Docs/instructions.ai"
+SKILLS_DIR = os.path.join(ROOT, "skills")
+SCRIPTS_DIR = os.path.join(ROOT, "scripts")
+BOOTSTRAP_SCRIPT = os.path.join(SCRIPTS_DIR, "bootstrap-project.sh")
+
+
+def print_banner() -> None:
+    print("\033[96m┌────────────────────────────────────────────────────────┐\033[0m")
+    print("\033[96m│          ⚡ instructions-ai — Global Agent OS           │\033[0m")
+    print("\033[96m└────────────────────────────────────────────────────────┘\033[0m")
+
+
+def list_skills() -> None:
+    print_banner()
+    if not os.path.isdir(SKILLS_DIR):
+        print(f"\033[91m[✗] Skills directory not found at {SKILLS_DIR}\033[0m")
+        return
+
+    skills = [f for f in os.listdir(SKILLS_DIR) if f.endswith(".md")]
+    print(f"\033[92m[✓] Found {len(skills)} Active Technical & Design Skills:\033[0m\n")
+    for skill in sorted(skills):
+        name = skill.replace(".md", "").replace("-", " ").title()
+        print(f"  • \033[97m{name:<30}\033[0m \033[90m(skills/{skill})\033[0m")
+    print("\n\033[90mEvery bootstrapped project also points agents to LAKSHYA_CONTEXT.md and WORKING_WITH_LAKSHYA.md.\033[0m")
+
+
+def init_project(target_path: str) -> None:
+    print_banner()
+    abs_path = os.path.abspath(target_path)
+    print(f"\033[90m[*] Bootstrapping project at: {abs_path}...\033[0m")
+
+    if not os.path.exists(BOOTSTRAP_SCRIPT):
+        print(f"\033[91m[✗] Bootstrap script not found at {BOOTSTRAP_SCRIPT}\033[0m")
+        return
+
+    try:
+        result = subprocess.run([BOOTSTRAP_SCRIPT, abs_path], capture_output=True, text=True, check=True)
+        print(result.stdout)
+        print(f"\033[92m✓ Successfully prepared project for Codex, Cursor, Windsurf, and Antigravity!\033[0m")
+    except subprocess.CalledProcessError as err:
+        print(f"\033[91m[✗] Bootstrap failed: {err.stderr}\033[0m")
+
+
+def sync_projects() -> None:
+    print_banner()
+    print("\033[90m[*] Scanning Docs for active instructions-ai projects...\033[0m")
+    # Quick target find inside Docs (TCC safe)
+    try:
+        output = subprocess.check_output(
+            ["find", "/Users/lol/Docs", "-maxdepth", 3, "-name", "PROJECT_CONTEXT.md"],
+            stderr=subprocess.DEVNULL,
+            text=True
+        )
+        projects = [os.path.dirname(p) for p in output.strip().split("\n") if p]
+    except Exception:
+        projects = []
+
+    # Include default workspaces
+    default_workspaces = ["/Users/lol/Documents/Agent Eval"]
+    for w in default_workspaces:
+        if os.path.exists(w) and w not in projects:
+            projects.append(w)
+
+    if not projects:
+        print("\033[93m[!] No active projects found.\033[0m")
+        return
+
+    print(f"\033[92m[✓] Found {len(projects)} active projects. Syncing all templates...\033[0m\n")
+    for proj in projects:
+        print(f"\033[90m[*] Force-syncing: {proj}...\033[0m")
+        try:
+            # Re-initialize to update templates
+            subprocess.run([BOOTSTRAP_SCRIPT, proj], capture_output=True, check=True)
+            # Copy local agent rules to force sync
+            subprocess.run(["cp", os.path.join(ROOT, "templates/AGENTS.md"), os.path.join(proj, "AGENTS.md")], check=True)
+            print(f"  • \033[92mSync OK\033[0m")
+        except Exception as exc:
+            print(f"  • \033[91mSync Failed: {exc}\033[0m")
+
+    print("\n\033[92m✓ All global project skills synchronized successfully!\033[0m")
+
+
+def print_help() -> None:
+    print_banner()
+    print("Usage:")
+    print("  instructions-ai init <path>  Bootstrap a project with templates & rules")
+    print("  instructions-ai skills       List active technical and design skills")
+    print("  instructions-ai sync         Force synchronize templates across all active projects")
+    print("  instructions-ai help         Show this help screen")
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        print_help()
+        sys.exit(0)
+
+    cmd = sys.argv[1]
+    if cmd == "init":
+        if len(sys.argv) < 3:
+            print("\033[91m[✗] Error: Please specify target path.\033[0m\n")
+            print("Usage: instructions-ai init /path/to/project")
+            sys.exit(1)
+        init_project(sys.argv[2])
+    elif cmd == "skills":
+        list_skills()
+    elif cmd == "sync":
+        sync_projects()
+    else:
+        print_help()
+
+
+if __name__ == "__main__":
+    main()

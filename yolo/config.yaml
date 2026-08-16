@@ -1,0 +1,74 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Camera Trap Triage — Configuration File  (v2.2 High-Throughput Edition)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── OFFLINE MODE ─────────────────────────────────────────────────────────────
+offline_mode: true   # If true, strictly offline execution
+
+# ── HIGH-THROUGHPUT PERFORMANCE TUNING ───────────────────────────────────────
+# Batch size for YOLO tensor inference (8, 16, or 32 depending on RAM/CPU)
+batch_size: 16
+
+# Inference image resolution (640 is standard YOLO, 480 is 30% faster with minimal accuracy drop)
+imgsz: 640
+
+# Number of parallel worker threads for I/O and pre-processing
+num_workers: 8
+
+# ── Stage 1: General Subject Detector (COCO) ─────────────────────────────────
+stage1_model: "weights/yolov8n.pt"
+stage1_confidence: 0.20
+
+# ── Stage 2: Tiger Classifier — SMART ENSEMBLE ───────────────────────────────
+stage2_model_a: "weights/best_yolov8.pt"
+stage2_model_b: "weights/best_enlightengan_and_yolov8.pt"
+
+# Smart ensemble: Stage 2B only runs on frames in the uncertainty band [10%, 70%].
+# Skips ~70% of Stage 2B calls to save massive compute time.
+smart_ensemble: true
+ensemble_uncertainty_band: [0.10, 0.70]
+
+# Test-Time Augmentation (disabled by default for high throughput)
+use_tta: false
+
+# Tiger confidence thresholds:
+retain_threshold: 0.60
+review_threshold: 0.30
+
+# ── Image Pre-processing ──────────────────────────────────────────────────────
+# Fast CLAHE contrast enhancement for dark/night frames
+enhance_dark_images: true
+dark_threshold: 80
+
+# ── Output Folders ────────────────────────────────────────────────────────────
+output_dir: "output"
+
+folders:
+  retain: "retain"              # Tiger confirmed ≥60%
+  review: "review"              # Ambiguous tiger 30-60% — human check needed
+  non_target: "non_target"      # Animal confirmed, not tiger
+  human_review: "human_review"  # Human detected — restricted access
+  quarantine: "quarantine"      # True blanks + corrupt images
+
+# ── Supported Image Extensions ────────────────────────────────────────────────
+supported_extensions:
+  - ".jpg"
+  - ".jpeg"
+  - ".png"
+  - ".bmp"
+  - ".webp"
+
+# ── COCO Class Routing ────────────────────────────────────────────────────────
+human_coco_class_id: 0
+animal_coco_class_ids:
+  - 14   # bird
+  - 15   # cat
+  - 16   # dog
+  - 17   # horse
+  - 18   # sheep
+  - 19   # cow
+  - 20   # elephant
+  - 21   # bear
+  - 22   # zebra
+  - 23   # giraffe
+  - 77   # teddy bear

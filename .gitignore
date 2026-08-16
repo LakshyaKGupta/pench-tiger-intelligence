@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project temp files
+tiger-intelligence/data/processed/anonymized/
+tiger-intelligence/data/processed/.tmp_enhanced/
+output/
+.tmp_enhanced/
+*.log
+
+# Streamlit
+.streamlit/
