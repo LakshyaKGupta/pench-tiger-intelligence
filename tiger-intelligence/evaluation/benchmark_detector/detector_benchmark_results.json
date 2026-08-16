@@ -1,0 +1,58 @@
+{
+  "YOLOv8n (COCO-80 Baseline)": {
+    "model_name": "YOLOv8n (COCO-80 Baseline)",
+    "device": "cpu",
+    "total_images": 97,
+    "elapsed_seconds": 13.047,
+    "throughput_img_per_sec": 7.43,
+    "animal_recall_percent": 91.89,
+    "blank_precision_percent": 100.0,
+    "blank_recall_percent": 100.0,
+    "critical_false_negatives": 3,
+    "false_positive_blanks": 0,
+    "human_recall_percent": 0.0,
+    "vehicle_recall_percent": 0.0
+  },
+  "YOLOv8n (MPS Metal Backend)": {
+    "model_name": "YOLOv8n (MPS Metal Backend)",
+    "device": "mps",
+    "total_images": 97,
+    "elapsed_seconds": 4.351,
+    "throughput_img_per_sec": 22.29,
+    "animal_recall_percent": 91.89,
+    "blank_precision_percent": 100.0,
+    "blank_recall_percent": 100.0,
+    "critical_false_negatives": 3,
+    "false_positive_blanks": 0,
+    "human_recall_percent": 0.0,
+    "vehicle_recall_percent": 0.0
+  },
+  "MegaDetector V6 (Zenodo MDV6 CPU)": {
+    "model_name": "MegaDetector V6 (Zenodo MDV6 CPU)",
+    "device": "cpu",
+    "total_images": 97,
+    "elapsed_seconds": 28.052,
+    "throughput_img_per_sec": 3.46,
+    "animal_recall_percent": 83.78,
+    "blank_precision_percent": 72.5,
+    "blank_recall_percent": 72.5,
+    "critical_false_negatives": 6,
+    "false_positive_blanks": 11,
+    "human_recall_percent": 16.67,
+    "vehicle_recall_percent": 12.5
+  },
+  "MegaDetector V6 (Zenodo MDV6 MPS)": {
+    "model_name": "MegaDetector V6 (Zenodo MDV6 MPS)",
+    "device": "mps",
+    "total_images": 97,
+    "elapsed_seconds": 14.79,
+    "throughput_img_per_sec": 6.56,
+    "animal_recall_percent": 83.78,
+    "blank_precision_percent": 72.5,
+    "blank_recall_percent": 72.5,
+    "critical_false_negatives": 6,
+    "false_positive_blanks": 11,
+    "human_recall_percent": 16.67,
+    "vehicle_recall_percent": 12.5
+  }
+}

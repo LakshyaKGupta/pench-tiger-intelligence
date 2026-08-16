@@ -1,0 +1,681 @@
+[
+  {
+    "filename": "bench_animal_000.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_000.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_001.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_001.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_002.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_002.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_003.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_003.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_004.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_004.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_005.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_005.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_006.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_006.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_007.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_007.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_008.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_008.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_009.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_009.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_010.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_010.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_011.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_011.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_012.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_012.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_013.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_013.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_014.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_014.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_015.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_015.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_016.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_016.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_017.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_017.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_018.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_018.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_019.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_019.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_020.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_020.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_021.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_021.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_022.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_022.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_023.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_023.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_024.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_024.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_025.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_025.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_026.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_026.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_027.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_027.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_028.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_028.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_029.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_029.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_030.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_030.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_031.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_031.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_032.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_032.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_033.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_033.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_034.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_034.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "description": "Real Amur tiger camera trap capture"
+  },
+  {
+    "filename": "bench_animal_035.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_035.jpg",
+    "true_category": "animal",
+    "true_species": "sloth_bear",
+    "description": "Sloth bear in foliage"
+  },
+  {
+    "filename": "bench_animal_036.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_animal_036.jpg",
+    "true_category": "animal",
+    "true_species": "bird",
+    "description": "Woodland bird on branch"
+  },
+  {
+    "filename": "bench_blank_000.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_000.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_001.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_001.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_002.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_002.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_003.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_003.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_004.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_004.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_005.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_005.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_006.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_006.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_007.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_007.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_008.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_008.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_009.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_009.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_010.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_010.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_011.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_011.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_012.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_012.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_013.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_013.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_014.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_014.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_015.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_015.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_016.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_016.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_017.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_017.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_018.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_018.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_019.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_019.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_020.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_020.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_021.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_021.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_022.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_022.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_023.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_023.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_024.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_024.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_025.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_025.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_026.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_026.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_027.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_027.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_028.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_028.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_029.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_029.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_030.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_030.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_031.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_031.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_032.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_032.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_033.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_033.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_034.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_034.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_035.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_035.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_blank_036.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_036.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 0"
+  },
+  {
+    "filename": "bench_blank_037.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_037.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 1"
+  },
+  {
+    "filename": "bench_blank_038.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_038.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 2"
+  },
+  {
+    "filename": "bench_blank_039.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_blank_039.jpg",
+    "true_category": "blank",
+    "true_species": "blank",
+    "description": "Camera trap blank trigger type 3"
+  },
+  {
+    "filename": "bench_person_000.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_000.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_001.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_001.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_002.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_002.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_003.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_003.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_004.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_004.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_005.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_005.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_006.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_006.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_007.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_007.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_008.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_008.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_009.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_009.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_010.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_010.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_person_011.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_person_011.jpg",
+    "true_category": "person",
+    "true_species": "human",
+    "description": "Forest officer on foot patrol"
+  },
+  {
+    "filename": "bench_vehicle_000.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_000.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  },
+  {
+    "filename": "bench_vehicle_001.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_001.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  },
+  {
+    "filename": "bench_vehicle_002.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_002.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  },
+  {
+    "filename": "bench_vehicle_003.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_003.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  },
+  {
+    "filename": "bench_vehicle_004.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_004.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  },
+  {
+    "filename": "bench_vehicle_005.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_005.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  },
+  {
+    "filename": "bench_vehicle_006.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_006.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  },
+  {
+    "filename": "bench_vehicle_007.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/images/bench_vehicle_007.jpg",
+    "true_category": "vehicle",
+    "true_species": "vehicle",
+    "description": "Forest department patrol gypsy"
+  }
+]

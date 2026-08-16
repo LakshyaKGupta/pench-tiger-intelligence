@@ -73,6 +73,17 @@ We strictly distinguish between **fast development unit tests** and **rigorous h
 | **Different-Individual Similarity** | **-0.104 – 0.313** (Mean: **0.111**) | Cosine similarity between different tiger individuals |
 | **Empirical Separation Margin** | **+0.463** | Gap between lowest true match (0.780) and highest non-match (0.317) |
 
+### 2. Subject Detector Benchmark (`evaluation/benchmark_detector/evaluate_detector.py`)
+Evaluates camera-trap triage performance across 97 manually curated & labelled images (37 animal captures, 40 empty/swaying foliage blanks, 12 field patrol humans, 8 patrol vehicles):
+
+| Metric | YOLOv8n (CPU) | YOLOv8n (Apple Silicon MPS) | MegaDetector V6 (CPU) | MegaDetector V6 (MPS) |
+|---|---|---|---|---|
+| **Animal Recall** | 91.89% (34/37) | 91.89% (34/37) | 83.78% (31/37) | 83.78% (31/37) |
+| **Blank Precision** | **100.0%** | **100.0%** | 72.5% | 72.5% |
+| **Critical False Negatives** | **3** | **3** | 6 | 6 |
+| **Throughput (img/s)** | 7.43 img/s | **22.29 img/s** | 3.46 img/s | 6.56 img/s |
+| **Offline Execution** | ✅ 100% Offline | ✅ 100% Offline | ✅ 100% Offline | ✅ 100% Offline |
+
 ---
 
 ## 🚀 Quickstart

@@ -183,6 +183,20 @@ class TestTigerIntelligence(unittest.TestCase):
             self.assertGreater(len(known_q), 0, "Query set must contain held-out known images")
             self.assertGreater(len(unk_q), 0, "Unknown query set must contain unseen individuals")
 
+    def test_camera_trap_subject_detector(self):
+        from app.detection.detector import CameraTrapDetector
+        # Test with local YOLOv8 baseline
+        detector = CameraTrapDetector(
+            model_path="tiger-intelligence/models/yolov8n.pt",
+            confidence_threshold=0.15,
+            device="cpu"
+        )
+        test_img = "tiger-intelligence/evaluation/dataset/query/T-001/000187.jpg"
+        results = detector.detect_batch([test_img])
+        self.assertEqual(len(results), 1)
+        self.assertTrue(results[0].has_animal, "Detector should detect animal in tiger test image")
+        self.assertFalse(results[0].is_blank, "Tiger image should not be classified as blank")
+
 
 if __name__ == "__main__":
     unittest.main()

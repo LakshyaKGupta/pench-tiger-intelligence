@@ -29,3 +29,7 @@ output/
 
 # Streamlit
 .streamlit/
+
+# Large Model Weights (>100MB)
+tiger-intelligence/models/*.ckpt
+tiger-intelligence/models/*.tar.gz
