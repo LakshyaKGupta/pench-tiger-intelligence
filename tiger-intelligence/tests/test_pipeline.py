@@ -185,14 +185,19 @@ class TestTigerIntelligence(unittest.TestCase):
 
     def test_camera_trap_subject_detector(self):
         from app.detection.detector import CameraTrapDetector
-        # Test with local YOLOv8 baseline
+        root_dir = Path(__file__).resolve().parent.parent
         detector = CameraTrapDetector(
-            model_path="tiger-intelligence/models/yolov8n.pt",
+            model_path=str(root_dir / "models" / "yolov8n.pt"),
             confidence_threshold=0.15,
             device="cpu"
         )
-        test_img = "tiger-intelligence/evaluation/dataset/query/T-001/000187.jpg"
-        results = detector.detect_batch([test_img])
+        test_img = root_dir / "evaluation" / "dataset" / "query" / "T-001" / "000187.jpg"
+        if not test_img.exists():
+            queries = list((root_dir / "evaluation" / "dataset" / "query").glob("*/*.jpg"))
+            if queries:
+                test_img = queries[0]
+
+        results = detector.detect_batch([str(test_img)])
         self.assertEqual(len(results), 1)
         self.assertTrue(results[0].has_animal, "Detector should detect animal in tiger test image")
         self.assertFalse(results[0].is_blank, "Tiger image should not be classified as blank")

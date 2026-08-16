@@ -1,0 +1,58 @@
+{
+  "version": "3.2.0",
+  "pipeline_timestamp": "2026-08-16T14:40:08.126389",
+  "runtime_seconds": 6.56,
+  "throughput_img_per_sec": 1.37,
+  "total_images_scanned": 9,
+  "corrupt_quarantined": 1,
+  "blanks_quarantined": 2,
+  "review_flagged": 0,
+  "humans_protected": 0,
+  "non_target_wildlife": 0,
+  "tigers_identified": 6,
+  "unique_individuals": 4,
+  "alerts_generated": 2,
+  "alerts": [
+    {
+      "alert_id": "ALT_VIL_T-PENCH-001_STN05_1786871407",
+      "alert_type": "VILLAGE_RISK",
+      "severity": "CRITICAL",
+      "tiger_id": "T-PENCH-001",
+      "station_id": "STN05",
+      "timestamp": "2019-05-30T21:11:57",
+      "title": "Tiger T-PENCH-001 Detected Near Village Boundary (1.9 km)",
+      "explanation": "Individual T-PENCH-001 was identified at station STN05 which is only 1.9 km from human settlement boundary. Re-ID similarity: 100.0%.",
+      "evidence_data": {
+        "distance_to_village_km": 1.9,
+        "threshold_km": 2.5,
+        "zone": "Corridor",
+        "coordinates": [
+          21.781,
+          79.372
+        ]
+      }
+    },
+    {
+      "alert_id": "ALT_SFT_T-PENCH-001_STN05_1786871407",
+      "alert_type": "RANGE_SHIFT",
+      "severity": "CRITICAL",
+      "tiger_id": "T-PENCH-001",
+      "station_id": "STN05",
+      "timestamp": "2019-05-30T21:11:57",
+      "title": "Significant Territory Shift Detected for T-PENCH-001 (7.4 km)",
+      "explanation": "Tiger T-PENCH-001 was detected 7.4 km away from its established home range centroid (21.7271, 79.3299). This exceeds the shift threshold (4.0 km) and may indicate territorial displacement or dispersal.",
+      "evidence_data": {
+        "baseline_centroid": [
+          21.72711111111111,
+          79.32988888888889
+        ],
+        "current_location": [
+          21.781,
+          79.372
+        ],
+        "shift_distance_km": 7.4,
+        "threshold_km": 4.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,441 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.312,
+          21.715
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C01",
+        "zone": "Core",
+        "village_dist_km": 8.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.335,
+          21.728
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C02",
+        "zone": "Core",
+        "village_dist_km": 6.8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.318,
+          21.745
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C03",
+        "zone": "Core",
+        "village_dist_km": 7.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.349,
+          21.762
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C04",
+        "zone": "Buffer",
+        "village_dist_km": 3.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.372,
+          21.781
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C05",
+        "zone": "Corridor",
+        "village_dist_km": 1.9
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.29,
+          21.701
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C06",
+        "zone": "Core",
+        "village_dist_km": 9.1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.36,
+          21.733
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C07",
+        "zone": "Core",
+        "village_dist_km": 5.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.385,
+          21.795
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "C42",
+        "zone": "Fringe",
+        "village_dist_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.312,
+          21.715
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "STN01",
+        "zone": "Core",
+        "village_dist_km": 8.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.335,
+          21.728
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "STN02",
+        "zone": "Core",
+        "village_dist_km": 6.8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.318,
+          21.745
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "STN03",
+        "zone": "Core",
+        "village_dist_km": 7.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.349,
+          21.762
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "STN04",
+        "zone": "Buffer",
+        "village_dist_km": 3.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.372,
+          21.781
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "STN05",
+        "zone": "Corridor",
+        "village_dist_km": 1.9
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.29,
+          21.701
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "STN06",
+        "zone": "Core",
+        "village_dist_km": 9.1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.325,
+          21.72
+        ]
+      },
+      "properties": {
+        "feature_type": "camera_station",
+        "station_id": "CAM_FIELD_01",
+        "zone": "Core",
+        "village_dist_km": 7.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.335,
+            21.728
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.312,
+            21.715
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.372,
+            21.781
+          ]
+        ]
+      },
+      "properties": {
+        "feature_type": "movement_trajectory",
+        "tiger_id": "T-PENCH-001",
+        "sightings_count": 9,
+        "first_seen": "2019-05-30T21:11:45",
+        "last_seen": "2019-05-30T21:11:57"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.329889,
+          21.727111
+        ]
+      },
+      "properties": {
+        "feature_type": "tiger_occupancy_centroid",
+        "tiger_id": "T-PENCH-001",
+        "home_range_km2": 4.54,
+        "last_seen": "2019-05-30T21:11:57"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ]
+        ]
+      },
+      "properties": {
+        "feature_type": "movement_trajectory",
+        "tiger_id": "T-PENCH-002",
+        "sightings_count": 3,
+        "first_seen": "2019-05-30T21:12:06",
+        "last_seen": "2019-05-30T21:12:06"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.325,
+          21.72
+        ]
+      },
+      "properties": {
+        "feature_type": "tiger_occupancy_centroid",
+        "tiger_id": "T-PENCH-002",
+        "home_range_km2": 0.0,
+        "last_seen": "2019-05-30T21:12:06"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ]
+        ]
+      },
+      "properties": {
+        "feature_type": "movement_trajectory",
+        "tiger_id": "T-PENCH-003",
+        "sightings_count": 3,
+        "first_seen": "2013-06-12T09:10:28",
+        "last_seen": "2013-06-12T09:10:28"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.325,
+          21.72
+        ]
+      },
+      "properties": {
+        "feature_type": "tiger_occupancy_centroid",
+        "tiger_id": "T-PENCH-003",
+        "home_range_km2": 0.0,
+        "last_seen": "2013-06-12T09:10:28"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.325,
+            21.72
+          ],
+          [
+            79.29,
+            21.701
+          ]
+        ]
+      },
+      "properties": {
+        "feature_type": "movement_trajectory",
+        "tiger_id": "T-PENCH-004",
+        "sightings_count": 3,
+        "first_seen": "2019-05-30T21:11:55",
+        "last_seen": "2019-05-30T21:11:55"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.313333,
+          21.713667
+        ]
+      },
+      "properties": {
+        "feature_type": "tiger_occupancy_centroid",
+        "tiger_id": "T-PENCH-004",
+        "home_range_km2": 0.0,
+        "last_seen": "2019-05-30T21:11:55"
+      }
+    }
+  ]
+}

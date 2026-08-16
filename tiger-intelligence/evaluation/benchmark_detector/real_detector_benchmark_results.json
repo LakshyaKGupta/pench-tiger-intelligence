@@ -1,0 +1,53 @@
+{
+  "YOLOv8n (COCO-80 Baseline)": {
+    "model_name": "YOLOv8n (COCO-80 Baseline)",
+    "device": "cpu",
+    "total_images": 100,
+    "elapsed_seconds": 17.692,
+    "throughput_img_per_sec": 5.65,
+    "animal_direct_recall_percent": 80.0,
+    "animal_safe_preservation_percent": 92.73,
+    "critical_false_negatives": 4,
+    "critical_false_negative_rate_percent": 7.27,
+    "blank_quarantine_precision_percent": 73.17,
+    "animals_kept": 44,
+    "animals_sent_to_review": 7,
+    "blanks_quarantined": 30,
+    "blanks_sent_to_review": 10,
+    "blanks_falsely_kept": 1
+  },
+  "MegaDetector V6 (Zenodo MDV6 MPS)": {
+    "model_name": "MegaDetector V6 (Zenodo MDV6 MPS)",
+    "device": "mps",
+    "total_images": 100,
+    "elapsed_seconds": 11.266,
+    "throughput_img_per_sec": 8.88,
+    "animal_direct_recall_percent": 80.0,
+    "animal_safe_preservation_percent": 87.27,
+    "critical_false_negatives": 7,
+    "critical_false_negative_rate_percent": 12.73,
+    "blank_quarantine_precision_percent": 80.49,
+    "animals_kept": 44,
+    "animals_sent_to_review": 4,
+    "blanks_quarantined": 33,
+    "blanks_sent_to_review": 2,
+    "blanks_falsely_kept": 6
+  },
+  "MegaDetector V6 (Zenodo MDV6 CPU)": {
+    "model_name": "MegaDetector V6 (Zenodo MDV6 CPU)",
+    "device": "cpu",
+    "total_images": 100,
+    "elapsed_seconds": 26.388,
+    "throughput_img_per_sec": 3.79,
+    "animal_direct_recall_percent": 80.0,
+    "animal_safe_preservation_percent": 87.27,
+    "critical_false_negatives": 7,
+    "critical_false_negative_rate_percent": 12.73,
+    "blank_quarantine_precision_percent": 80.49,
+    "animals_kept": 44,
+    "animals_sent_to_review": 4,
+    "blanks_quarantined": 33,
+    "blanks_sent_to_review": 2,
+    "blanks_falsely_kept": 6
+  }
+}

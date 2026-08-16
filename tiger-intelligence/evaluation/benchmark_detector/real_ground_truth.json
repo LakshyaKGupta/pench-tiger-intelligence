@@ -1,0 +1,902 @@
+[
+  {
+    "filename": "NSCF0002_250630121802_0022.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630121802_0022.JPG",
+    "true_category": "person",
+    "true_species": "human",
+    "environment": "day_forest_field_patrol",
+    "difficulty": "normal",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630121802_0023.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630121802_0023.JPG",
+    "true_category": "person",
+    "true_species": "human",
+    "environment": "day_forest_field_patrol",
+    "difficulty": "normal",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630121803_0024.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630121803_0024.JPG",
+    "true_category": "person",
+    "true_species": "human",
+    "environment": "day_forest_field_patrol",
+    "difficulty": "normal",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630121901_0026.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630121901_0026.JPG",
+    "true_category": "person",
+    "true_species": "human",
+    "environment": "day_forest_field_patrol",
+    "difficulty": "normal",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630121901_0027.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630121901_0027.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630121902_0028.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630121902_0028.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122001_0030.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122001_0030.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122001_0031.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122001_0031.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122002_0032.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122002_0032.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122101_0034.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122101_0034.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122101_0035.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122101_0035.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122102_0036.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122102_0036.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122201_0038.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122201_0038.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122201_0039.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122201_0039.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122202_0040.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122202_0040.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122301_0042.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122301_0042.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122301_0043.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122301_0043.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122302_0044.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122302_0044.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122401_0046.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122401_0046.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122401_0047.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122401_0047.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122402_0048.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122402_0048.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122501_0050.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122501_0050.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122501_0051.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122501_0051.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122502_0052.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122502_0052.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122601_0054.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122601_0054.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122601_0055.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122601_0055.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122602_0056.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122602_0056.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122701_0058.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122701_0058.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122701_0059.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122701_0059.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122702_0060.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122702_0060.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122801_0062.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122801_0062.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122801_0063.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122801_0063.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122802_0064.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122802_0064.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122901_0066.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122901_0066.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122901_0067.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122901_0067.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630122902_0068.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630122902_0068.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123001_0070.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123001_0070.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123001_0071.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123001_0071.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123002_0072.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123002_0072.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123101_0074.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123101_0074.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123101_0075.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123101_0075.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123102_0076.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123102_0076.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123202_0080.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123202_0080.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123401_0086.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123401_0086.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "NSCF0002_250630123402_0088.JPG",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/NSCF0002_250630123402_0088.JPG",
+    "true_category": "blank",
+    "true_species": "blank",
+    "environment": "real_camera_trap_swaying_vegetation_and_weather",
+    "difficulty": "challenging_vegetation",
+    "source": "thewilds_cameratraps_real_field_data"
+  },
+  {
+    "filename": "real_tiger_000.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_000.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_001.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_001.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_002.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_002.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_003.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_003.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_004.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_004.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_005.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_005.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_006.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_006.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_007.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_007.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_008.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_008.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_009.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_009.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_010.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_010.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_011.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_011.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_012.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_012.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_013.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_013.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_014.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_014.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_015.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_015.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_016.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_016.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_017.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_017.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_018.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_018.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_019.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_019.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_020.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_020.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_021.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_021.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_022.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_022.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_023.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_023.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_024.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_024.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_025.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_025.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_026.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_026.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_027.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_027.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_028.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_028.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_029.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_029.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_030.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_030.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_031.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_031.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_032.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_032.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_033.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_033.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_034.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_034.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_035.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_035.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_036.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_036.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_037.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_037.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_038.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_038.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_039.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_039.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_partial_body",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_wildlife_sloth_bear.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_wildlife_sloth_bear.jpg",
+    "true_category": "animal",
+    "true_species": "sloth_bear",
+    "environment": "dense_canopy_foliage",
+    "difficulty": "challenging_occlusion",
+    "source": "pench_wildlife_sample"
+  },
+  {
+    "filename": "real_wildlife_bird.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_wildlife_bird.jpg",
+    "true_category": "animal",
+    "true_species": "bird",
+    "environment": "woodland_branch",
+    "difficulty": "normal",
+    "source": "pench_wildlife_sample"
+  },
+  {
+    "filename": "real_tiger_field_gal_000.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_000.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_night_or_partial",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_001.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_001.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_002.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_002.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_night_or_partial",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_003.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_003.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_004.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_004.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_night_or_partial",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_005.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_005.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_006.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_006.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_night_or_partial",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_007.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_007.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_008.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_008.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_night_or_partial",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_009.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_009.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_010.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_010.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_night_or_partial",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_011.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_011.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "normal",
+    "source": "atrw_amur_tiger_in_the_wild"
+  },
+  {
+    "filename": "real_tiger_field_gal_012.jpg",
+    "path": "tiger-intelligence/evaluation/benchmark_detector/real_images/real_tiger_field_gal_012.jpg",
+    "true_category": "animal",
+    "true_species": "tiger",
+    "environment": "real_tiger_field_capture",
+    "difficulty": "challenging_night_or_partial",
+    "source": "atrw_amur_tiger_in_the_wild"
+  }
+]

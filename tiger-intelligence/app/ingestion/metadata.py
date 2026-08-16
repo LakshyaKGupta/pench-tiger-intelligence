@@ -26,6 +26,12 @@ PENCH_DEFAULT_STATIONS = {
     "C06": {"lat": 21.7010, "lon": 79.2900, "zone": "Core", "village_km": 9.1, "buffer_km": 15.2},
     "C07": {"lat": 21.7330, "lon": 79.3600, "zone": "Core", "village_km": 5.5, "buffer_km": 10.4},
     "C42": {"lat": 21.7950, "lon": 79.3850, "zone": "Fringe", "village_km": 1.2, "buffer_km": 1.8},
+    "STN01": {"lat": 21.7150, "lon": 79.3120, "zone": "Core", "village_km": 8.2, "buffer_km": 14.5},
+    "STN02": {"lat": 21.7280, "lon": 79.3350, "zone": "Core", "village_km": 6.8, "buffer_km": 12.1},
+    "STN03": {"lat": 21.7450, "lon": 79.3180, "zone": "Core", "village_km": 7.5, "buffer_km": 13.0},
+    "STN04": {"lat": 21.7620, "lon": 79.3490, "zone": "Buffer", "village_km": 3.4, "buffer_km": 5.2},
+    "STN05": {"lat": 21.7810, "lon": 79.3720, "zone": "Corridor", "village_km": 1.9, "buffer_km": 2.8},
+    "STN06": {"lat": 21.7010, "lon": 79.2900, "zone": "Core", "village_km": 9.1, "buffer_km": 15.2},
     "CAM_FIELD_01": {"lat": 21.7200, "lon": 79.3250, "zone": "Core", "village_km": 7.0, "buffer_km": 12.0},
 }
 

@@ -88,17 +88,39 @@ class CameraTrapDetector:
         imgsz: int = 640,
         device: Optional[str] = None,
     ):
-        self.model_path = Path(model_path)
-        if not self.model_path.exists():
-            # Fallback to YOLOv8n if MDV6 not present
-            fallback_yolo = Path("tiger-intelligence/models/yolov8n.pt")
-            if fallback_yolo.exists() and self.model_path.name != "yolov8n.pt":
-                self.model_path = fallback_yolo
+        # Robust model path resolution
+        candidate_path = Path(model_path)
+        if not candidate_path.exists():
+            pkg_models = Path(__file__).resolve().parent.parent.parent / "models" / candidate_path.name
+            cwd_models = Path.cwd() / "models" / candidate_path.name
+            tiger_models = Path.cwd() / "tiger-intelligence" / "models" / candidate_path.name
+            for c in [pkg_models, cwd_models, tiger_models]:
+                if c.exists():
+                    candidate_path = c
+                    break
+
+        if not candidate_path.exists():
+            # Fallback to YOLOv8n if available
+            fallback_candidates = [
+                Path(__file__).resolve().parent.parent.parent / "models" / "yolov8n.pt",
+                Path.cwd() / "models" / "yolov8n.pt",
+                Path.cwd() / "tiger-intelligence" / "models" / "yolov8n.pt",
+            ]
+            found_fallback = None
+            for fb in fallback_candidates:
+                if fb.exists():
+                    found_fallback = fb
+                    break
+
+            if found_fallback and candidate_path.name != "yolov8n.pt":
+                candidate_path = found_fallback
             else:
                 raise FileNotFoundError(
                     f"FATAL: Camera trap detector weights not found at '{model_path}'. "
                     f"Ensure offline model weights are downloaded to the models/ directory."
                 )
+
+        self.model_path = candidate_path
 
         self.conf_threshold = confidence_threshold
         self.batch_size = batch_size

@@ -280,6 +280,17 @@ class TigerDatabase:
             reid_matched_tiger_id, reid_similarity,
             reid_confidence_level, reid_evidence_breakdown
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(detection_id) DO UPDATE SET
+            station_id=excluded.station_id,
+            timestamp=excluded.timestamp,
+            detected_species=excluded.detected_species,
+            species_confidence=excluded.species_confidence,
+            crop_path=excluded.crop_path,
+            flank_orientation=excluded.flank_orientation,
+            reid_matched_tiger_id=excluded.reid_matched_tiger_id,
+            reid_similarity=excluded.reid_similarity,
+            reid_confidence_level=excluded.reid_confidence_level,
+            reid_evidence_breakdown=excluded.reid_evidence_breakdown
         """
         x1, y1, x2, y2 = bbox if bbox else (None, None, None, None)
         evidence_json = json.dumps(reid_evidence_breakdown or {})
@@ -309,7 +320,7 @@ class TigerDatabase:
         survey_id: str = "Pench_2026_Cycle1",
     ):
         sql = """
-        INSERT INTO movement_records (
+        INSERT OR IGNORE INTO movement_records (
             tiger_id, detection_id, station_id, timestamp, latitude, longitude, survey_id
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
         """
