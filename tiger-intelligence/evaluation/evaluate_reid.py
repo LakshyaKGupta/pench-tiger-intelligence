@@ -113,14 +113,22 @@ def run_held_out_reid_benchmark(
     if ground_truth_file.exists():
         with open(ground_truth_file, "r") as f:
             gt_records = json.load(f)
-            gt_map = {str(Path(r["query_path"]).resolve()): r["true_tiger_id"] for r in gt_records}
+            gt_map = {}
+            for r in gt_records:
+                raw_path = r.get("query_path", "")
+                clean_rel = raw_path.replace("tiger-intelligence/evaluation/dataset/", "").replace("evaluation/dataset/", "")
+                resolved_p = (base_path / clean_rel).resolve()
+                gt_map[str(resolved_p)] = r.get("true_tiger_id")
+                gt_map[resolved_p.name] = r.get("true_tiger_id")
     else:
         # Build GT map from directory structure
         gt_map = {}
         for q in known_q_files:
             gt_map[str(q.resolve())] = q.parent.name
+            gt_map[q.name] = q.parent.name
         for u in unknown_q_files:
             gt_map[str(u.resolve())] = None
+            gt_map[u.name] = None
 
     extractor = TigerStripeFeatureExtractor(model_name=model_name)
     matcher = TigerReIDMatcher(
@@ -170,7 +178,7 @@ def run_held_out_reid_benchmark(
 
     for q_file in all_query_files:
         canonical_q = str(q_file.resolve())
-        true_id = gt_map.get(canonical_q)
+        true_id = gt_map.get(canonical_q) if canonical_q in gt_map else gt_map.get(q_file.name)
         is_unknown = (true_id is None)
 
         q_emb = extractor.extract_embedding(str(q_file))

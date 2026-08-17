@@ -92,8 +92,8 @@ class CameraTrapTriagePolicy:
             )
 
         # Case 2: Ambiguous / Low Confidence Detection [quarantine_threshold, keep_threshold)
-        # Model noticed a possible subject, but is uncertain -> DO NOT QUARANTINE!
-        if (not detection.is_blank and top_conf >= self.quarantine_threshold) or (0 < top_conf < self.keep_threshold):
+        # Model noticed a candidate subject in the uncertainty band -> Preserving for human review
+        if not detection.is_blank and self.quarantine_threshold <= top_conf < self.keep_threshold:
             return TriageDecision(
                 image_path=detection.image_path,
                 action=TriageAction.REVIEW,
@@ -111,20 +111,20 @@ class CameraTrapTriagePolicy:
                 }
             )
 
-        # Case 3: High-Confidence Blank (< quarantine_threshold with 0 detection boxes)
+        # Case 3: High-Confidence Blank (< quarantine_threshold or no valid subject detected)
         return TriageDecision(
             image_path=detection.image_path,
             action=TriageAction.QUARANTINE,
-            reason=f"High-confidence blank frame (no subjects detected, top_conf < {self.quarantine_threshold:.2f})",
+            reason=f"High-confidence blank frame (no subjects detected above {self.quarantine_threshold:.2f}, top_conf={top_conf:.2f})",
             subject_category="blank",
             top_confidence=top_conf,
-            box_count=0,
+            box_count=len(detection.boxes),
             audit_log_entry={
                 "stage": "TRIAGE",
                 "decision": "QUARANTINE",
                 "category": "blank",
                 "confidence": round(top_conf, 4),
-                "boxes": 0,
+                "boxes": len(detection.boxes),
                 "reason": "Reversible blank quarantine",
             }
         )

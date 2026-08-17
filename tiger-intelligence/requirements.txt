@@ -12,3 +12,4 @@ streamlit-folium>=0.16.0
 plotly>=5.18.0
 pandas>=2.0.0
 numpy>=1.24.0
+argon2-cffi>=23.1.0

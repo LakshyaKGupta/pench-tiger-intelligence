@@ -1,0 +1,37 @@
+{
+  "system": "TIGERTRACK AI — Pench Tiger Reserve Intelligence System",
+  "version": "1.0.0-rc1",
+  "models": {
+    "megadescriptor_t_224": {
+      "filename": "megadescriptor_t_224.pth",
+      "architecture": "swin_tiny_patch4_window7_224",
+      "task": "Wildlife Animal Metric Re-Identification",
+      "embedding_dim": 768,
+      "input_resolution": [3, 224, 224],
+      "sha256": "65e2dd7f3eeb82ab7b7eedf7c80d0c6e3cc39412a7582bb6f49ad42e38278e16",
+      "size_bytes": 109865615,
+      "offline_required": true,
+      "license": "MIT"
+    },
+    "megadetector_v6": {
+      "filename": "MDV6-mit-yolov9-c.ckpt",
+      "architecture": "yolov9-c",
+      "task": "Camera Trap Subject Localization (Animal/Person/Vehicle)",
+      "num_classes": 3,
+      "input_resolution": [3, 640, 640],
+      "sha256": "de7b33c5ae5e974b7ed79484b04ca67d412e9aa4e17a9f046076c48804a2f214",
+      "size_bytes": 118434827,
+      "offline_required": true,
+      "license": "MIT"
+    },
+    "yolov8n_fallback": {
+      "filename": "yolov8n.pt",
+      "architecture": "yolov8n",
+      "task": "Lightweight Auxiliary Detector Fallback",
+      "sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+      "size_bytes": 6534387,
+      "offline_required": true,
+      "license": "AGPL-3.0"
+    }
+  }
+}

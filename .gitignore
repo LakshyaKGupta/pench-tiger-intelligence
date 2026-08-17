@@ -54,3 +54,8 @@ frontend/src-tauri/binaries/
 *.app
 tiger-intelligence/models/*.ckpt
 tiger-intelligence/models/*.tar.gz
+
+# Large model weights — too big for GitHub (105 MB). Store via Git LFS or local only.
+tiger-intelligence/models/*.pth
+tiger-intelligence/models/*.pt
+tiger-intelligence/models/*.bin

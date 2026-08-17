@@ -46,7 +46,11 @@ def apply_privacy_blur(
             img[y1:y2, x1:x2] = blurred_roi
 
     if not output_blurred_path:
-        out_dir = Path("tiger-intelligence/data/processed/anonymized")
+        try:
+            from app.storage.manager import get_storage_manager
+            out_dir = get_storage_manager().root / "processed" / "anonymized"
+        except Exception:
+            out_dir = Path(__file__).resolve().parent.parent.parent / "data" / "processed" / "anonymized"
         out_dir.mkdir(parents=True, exist_ok=True)
         output_blurred_path = str(out_dir / f"anon_{Path(image_path).name}")
 
@@ -56,10 +60,17 @@ def apply_privacy_blur(
 
 def quarantine_human_frame(
     image_path: str,
-    human_quarantine_dir: str = "tiger-intelligence/data/quarantine/human_review"
+    human_quarantine_dir: Optional[str] = None
 ) -> str:
     """Move raw unmasked human image to restricted quarantine directory."""
-    dest_dir = Path(human_quarantine_dir)
+    if human_quarantine_dir is None:
+        try:
+            from app.storage.manager import get_storage_manager
+            dest_dir = get_storage_manager().quarantine_privacy
+        except Exception:
+            dest_dir = Path(__file__).resolve().parent.parent.parent / "data" / "quarantine" / "human_review"
+    else:
+        dest_dir = Path(human_quarantine_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest_file = dest_dir / Path(image_path).name
 

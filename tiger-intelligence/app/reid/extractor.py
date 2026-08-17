@@ -7,12 +7,14 @@ pretrained MegaDescriptor-T-224 animal re-identification foundation model (BVRA/
 """
 
 import os
+import sys
 
 # Enforce strict offline operation for all HuggingFace and PyTorch Hub calls
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
+from pathlib import Path
 from typing import List, Optional, Union
 
 import numpy as np
@@ -21,50 +23,71 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-DEFAULT_REID_MODEL = "hf-hub:BVRA/MegaDescriptor-T-224"
+DEFAULT_REID_MODEL_PATH = "tiger-intelligence/models/megadescriptor_t_224.pth"
+DEFAULT_REID_MODEL = DEFAULT_REID_MODEL_PATH
 
 
 class TigerStripeFeatureExtractor:
     """
-    Wildlife Re-ID Feature Extractor using pretrained MegaDescriptor foundation model.
+    Wildlife Re-ID Feature Extractor using local pretrained MegaDescriptor foundation model.
     Trained on animal metric loss across wild multi-taxa identification datasets.
     """
 
     def __init__(
         self,
-        model_name: str = DEFAULT_REID_MODEL,
+        model_path: Optional[str] = None,
+        model_name: Optional[str] = None,
         device: str = "cpu",
         embedding_dim: int = 768,
         offline_mode: bool = True,
     ):
         self.device = device
-        self.model_name = model_name
         self.embedding_dim = embedding_dim
         self.offline_mode = offline_mode
+        self.model_name = model_name or model_path or DEFAULT_REID_MODEL_PATH
 
-        # Set Hugging Face offline environment if requested
-        if offline_mode:
-            os.environ["HF_HUB_OFFLINE"] = "1"
-            os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        # Set strict offline flags
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
+        # Resolve local weights path across development, PyInstaller, and working directories
+        target_path = None
+        candidates = []
+        if model_path:
+            candidates.append(Path(model_path))
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            candidates.append(Path(sys._MEIPASS) / "models" / "megadescriptor_t_224.pth")
+        candidates.extend([
+            Path(__file__).resolve().parent.parent.parent / "models" / "megadescriptor_t_224.pth",
+            Path.cwd() / "tiger-intelligence" / "models" / "megadescriptor_t_224.pth",
+            Path.cwd() / "models" / "megadescriptor_t_224.pth",
+            Path(DEFAULT_REID_MODEL_PATH),
+        ])
+
+        for cand in candidates:
+            if cand.exists() and cand.is_file() and cand.stat().st_size > 10_000_000:
+                target_path = cand.resolve()
+                break
+
+        if target_path is None or not target_path.exists():
+            raise FileNotFoundError(
+                f"FATAL: Offline Re-ID model weights not found in bundle. "
+                f"Searched: {[str(c) for c in candidates]}. "
+                f"Ensure 'megadescriptor_t_224.pth' is bundled in the application's models/ directory."
+            )
+
+        self.model_path = target_path
+
+        # Direct local model construction with zero network access
         try:
-            self.model = timm.create_model(model_name, pretrained=True, num_classes=0).to(device)
-            self.model.eval()
+            self.model = timm.create_model("swin_tiny_patch4_window7_224", pretrained=False, num_classes=0)
+            state_dict = torch.load(str(self.model_path), map_location=device, weights_only=True)
+            if "model" in state_dict and isinstance(state_dict["model"], dict):
+                state_dict = state_dict["model"]
+            self.model.load_state_dict(state_dict, strict=True)
+            self.model.eval().to(device)
         except Exception as e:
-            # If offline mode failed because weights aren't cached yet, provide clean actionable error
-            if offline_mode:
-                # Try loading with offline flag relaxed once if first run
-                os.environ.pop("HF_HUB_OFFLINE", None)
-                try:
-                    self.model = timm.create_model(model_name, pretrained=True, num_classes=0).to(device)
-                    self.model.eval()
-                except Exception as ex2:
-                    raise RuntimeError(
-                        f"FATAL: Could not load Re-ID model '{model_name}'. "
-                        f"Offline weights missing from local cache: {ex2}"
-                    )
-            else:
-                raise RuntimeError(f"Failed to load Re-ID model '{model_name}': {e}")
+            raise RuntimeError(f"Failed to load local Re-ID weights from '{self.model_path}': {e}")
 
         # MegaDescriptor standardization transform
         self.transform = transforms.Compose([

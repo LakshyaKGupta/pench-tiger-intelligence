@@ -20,10 +20,12 @@ export class ApiError extends Error {
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
-  const headers = {
+  const token = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("tt_session_token") : null;
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
-    ...options.headers,
+    ...(token ? { "X-Session-Token": token } : {}),
+    ...(options.headers as Record<string, string>),
   };
 
   try {

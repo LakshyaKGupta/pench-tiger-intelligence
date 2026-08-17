@@ -1,9 +1,9 @@
-"""
-test_pipeline.py — Comprehensive Test Suite for Pench Tiger Intelligence System
-"""
-
+import os
+import shutil
 import sys
+import tempfile
 import unittest
+import uuid
 from pathlib import Path
 
 import numpy as np
@@ -51,21 +51,24 @@ class TestTigerIntelligence(unittest.TestCase):
         self.assertAlmostEqual(norm, 1.0, places=4, msg="Embedding must be strictly L2-normalized")
 
     def test_deterministic_flank_candidate_generation(self):
-        # Create a synthetic image and test candidate extraction
-        test_img_path = Path("tiger-intelligence/data/raw/IMG_TEST_CROP.jpg")
-        test_img_path.parent.mkdir(parents=True, exist_ok=True)
-        from PIL import Image
-        img = Image.fromarray(np.random.randint(0, 255, (500, 800, 3), dtype=np.uint8))
-        img.save(test_img_path)
+        # Create a synthetic image in a clean temp location
+        temp_dir = tempfile.mkdtemp()
+        try:
+            test_img_path = Path(temp_dir) / "IMG_TEST_CROP.jpg"
+            from PIL import Image
+            img = Image.fromarray(np.random.randint(0, 255, (500, 800, 3), dtype=np.uint8))
+            img.save(test_img_path)
 
-        bbox = (100, 50, 700, 450)  # w=600, h=400
-        candidates = generate_flank_candidates(str(test_img_path), bbox, output_crop_dir=None)
+            bbox = (100, 50, 700, 450)  # w=600, h=400
+            candidates = generate_flank_candidates(str(test_img_path), bbox, output_crop_dir=None)
 
-        self.assertEqual(len(candidates), 3, "Must generate 3 deterministic candidates: body, left, right")
-        types = [c.crop_type for c in candidates]
-        self.assertIn("body_candidate", types)
-        self.assertIn("left_candidate", types)
-        self.assertIn("right_candidate", types)
+            self.assertEqual(len(candidates), 3, "Must generate 3 deterministic candidates: body, left, right")
+            types = [c.crop_type for c in candidates]
+            self.assertIn("body_candidate", types)
+            self.assertIn("left_candidate", types)
+            self.assertIn("right_candidate", types)
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
         # Cleanup test image
         if test_img_path.exists():
@@ -111,68 +114,67 @@ class TestTigerIntelligence(unittest.TestCase):
         self.assertEqual(res_med.confidence_level, "MEDIUM_REVIEW_REQUIRED")
 
     def test_survey_effort_correction(self):
-        db_path = Path("tiger-intelligence/database/test_effort.db")
-        if db_path.exists():
-            db_path.unlink()
-        db = TigerDatabase(db_path)
-        alert_engine = AlertEngine(db)
+        temp_dir = tempfile.mkdtemp()
+        try:
+            db_path = Path(temp_dir) / "test_effort.db"
+            db = TigerDatabase(db_path)
+            alert_engine = AlertEngine(db)
 
-        # 1. Register camera stations
-        db.upsert_station("C01", 21.715, 79.312, survey_id="Cycle1", active_from="2020-01-01")
-        db.upsert_station("C02", 21.728, 79.335, survey_id="Cycle1", active_from="2020-01-01")
-        db.upsert_station("C05", 21.781, 79.372, survey_id="Cycle2", active_from="2026-08-01")
+            # 1. Register camera stations
+            db.upsert_station("C01", 21.715, 79.312, survey_id="Cycle1", active_from="2020-01-01")
+            db.upsert_station("C02", 21.728, 79.335, survey_id="Cycle1", active_from="2020-01-01")
+            db.upsert_station("C05", 21.781, 79.372, survey_id="Cycle2", active_from="2026-08-01")
 
-        # 2. Register tiger
-        db.register_tiger("T-007", name="Test Tiger")
+            # 2. Register tiger
+            db.register_tiger("T-007", name="Test Tiger")
 
-        # 3. Record historical image & detection at C01
-        db.record_image("IMG_01", "/dummy/path.jpg", "path.jpg", 100, "ROOT", station_id="C01")
-        db.record_detection(
-            detection_id="DET_01",
-            image_id="IMG_01",
-            station_id="C01",
-            timestamp="2026-08-01T10:00:00",
-            is_animal=True,
-            is_human=False,
-            is_vehicle=False,
-            is_blank=False,
-            detected_species="tiger",
-            species_confidence=0.95,
-            reid_matched_tiger_id="T-007",
-            reid_similarity=0.95,
-            reid_confidence_level="HIGH"
-        )
-        db.record_movement("T-007", "DET_01", "C01", "2026-08-01T10:00:00", 21.715, 79.312)
+            # 3. Record historical image & detection at C01
+            db.record_image("IMG_01", "/dummy/path.jpg", "path.jpg", 100, "ROOT", station_id="C01")
+            db.record_detection(
+                detection_id="DET_01",
+                image_id="IMG_01",
+                station_id="C01",
+                timestamp="2026-08-01T10:00:00",
+                is_animal=True,
+                is_human=False,
+                is_vehicle=False,
+                is_blank=False,
+                detected_species="tiger",
+                species_confidence=0.95,
+                reid_matched_tiger_id="T-007",
+                reid_similarity=0.95,
+                reid_confidence_level="HIGH"
+            )
+            db.record_movement("T-007", "DET_01", "C01", "2026-08-01T10:00:00", 21.715, 79.312)
 
-        # Case A: Station C05 was newly activated in 2026-08-01 -> No movement expansion alert
-        alerts_new_cam = alert_engine.evaluate_new_sighting(
-            tiger_id="T-007",
-            current_station_id="C05",
-            current_timestamp="2026-08-05T10:00:00",
-            current_lat=21.781,
-            current_lon=79.372,
-        )
-        expansion_alerts = [a for a in alerts_new_cam if a["alert_type"] == "NEW_STATION_EXPANSION"]
-        self.assertEqual(len(expansion_alerts), 0, "New camera deployment should NOT trigger NEW_STATION_EXPANSION alert (survey effort correction)")
+            # Case A: Station C05 was newly activated in 2026-08-01 -> No movement expansion alert
+            alerts_new_cam = alert_engine.evaluate_new_sighting(
+                tiger_id="T-007",
+                current_station_id="C05",
+                current_timestamp="2026-08-05T10:00:00",
+                current_lat=21.781,
+                current_lon=79.372,
+            )
+            expansion_alerts = [a for a in alerts_new_cam if a["alert_type"] == "NEW_STATION_EXPANSION"]
+            self.assertEqual(len(expansion_alerts), 0, "New camera deployment should NOT trigger NEW_STATION_EXPANSION alert (survey effort correction)")
 
-        # Case B: Station C02 was active for years -> Valid movement expansion alert
-        alerts_old_cam = alert_engine.evaluate_new_sighting(
-            tiger_id="T-007",
-            current_station_id="C02",
-            current_timestamp="2026-08-10T10:00:00",
-            current_lat=21.728,
-            current_lon=79.335,
-        )
-        expansion_alerts_old = [a for a in alerts_old_cam if a["alert_type"] == "NEW_STATION_EXPANSION"]
-        self.assertEqual(len(expansion_alerts_old), 1, "Historically active station should trigger NEW_STATION_EXPANSION alert")
-
-        # Cleanup
-        if db_path.exists():
-            db_path.unlink()
+            # Case B: Station C02 was active for years -> Valid movement expansion alert
+            alerts_old_cam = alert_engine.evaluate_new_sighting(
+                tiger_id="T-007",
+                current_station_id="C02",
+                current_timestamp="2026-08-10T10:00:00",
+                current_lat=21.728,
+                current_lon=79.335,
+            )
+            expansion_alerts_old = [a for a in alerts_old_cam if a["alert_type"] == "NEW_STATION_EXPANSION"]
+            self.assertEqual(len(expansion_alerts_old), 1, "Historically active station should trigger NEW_STATION_EXPANSION alert")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_held_out_dataset_integrity(self):
         from evaluation.evaluate_reid import verify_dataset_integrity
-        base_dir = Path("tiger-intelligence/evaluation/dataset")
+        root_dir = Path(__file__).resolve().parent.parent
+        base_dir = root_dir / "evaluation" / "dataset"
         if (base_dir / "gallery").exists() and (base_dir / "query").exists():
             gal_dict, known_q, unk_q = verify_dataset_integrity(
                 base_dir / "gallery",
@@ -217,68 +219,67 @@ class TestTigerIntelligence(unittest.TestCase):
     def test_human_review_persistence(self):
         """Human review decisions must be written to the database and original AI prediction must be preserved."""
         from app.database.db import TigerDatabase
-        db_path = Path("tiger-intelligence/database/test_human_review.db")
-        if db_path.exists():
-            db_path.unlink()
-        db = TigerDatabase(db_path)
+        temp_dir = tempfile.mkdtemp()
+        try:
+            db_path = Path(temp_dir) / "test_human_review.db"
+            db = TigerDatabase(db_path)
 
-        # Seed required FK data
-        db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2026-01-01")
-        db.register_tiger("T-001", name="Test Tiger Alpha")
-        db.record_image("IMG_01", "/dummy/path.jpg", "path.jpg", 100, "C01", station_id="C01")
-        db.record_detection(
-            detection_id="DET_001",
-            image_id="IMG_01",
-            station_id="C01",
-            timestamp="2026-08-01T10:00:00",
-            is_animal=True,
-            is_human=False,
-            is_vehicle=False,
-            is_blank=False,
-            detected_species="tiger",
-            species_confidence=0.88,
-            reid_matched_tiger_id="T-001",
-            reid_similarity=0.55,            # MEDIUM band
-            reid_confidence_level="MEDIUM_REVIEW_REQUIRED",
-        )
+            # Seed required FK data
+            db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2026-01-01")
+            db.register_tiger("T-001", name="Test Tiger Alpha")
+            db.record_image("IMG_01", "/dummy/path.jpg", "path.jpg", 100, "C01", station_id="C01")
+            db.record_detection(
+                detection_id="DET_001",
+                image_id="IMG_01",
+                station_id="C01",
+                timestamp="2026-08-01T10:00:00",
+                is_animal=True,
+                is_human=False,
+                is_vehicle=False,
+                is_blank=False,
+                detected_species="tiger",
+                species_confidence=0.88,
+                reid_matched_tiger_id="T-001",
+                reid_similarity=0.55,            # MEDIUM band
+                reid_confidence_level="MEDIUM_REVIEW_REQUIRED",
+            )
 
-        # Verify it appears in pending reviews
-        pending = db.get_pending_reviews()
-        det_ids = [r["detection_id"] for r in pending]
-        self.assertIn("DET_001", det_ids, "Detection should be in pending review queue")
+            # Verify it appears in pending reviews
+            pending = db.get_pending_reviews()
+            det_ids = [r["detection_id"] for r in pending]
+            self.assertIn("DET_001", det_ids, "Detection should be in pending review queue")
 
-        # Apply human correction (confirm match)
-        success = db.apply_human_correction(
-            detection_id="DET_001",
-            human_decision="CONFIRMED",
-            corrected_tiger_id="T-001",
-            actor="TEST_OFFICER",
-        )
-        self.assertTrue(success, "apply_human_correction must return True on success")
+            # Apply human correction (confirm match)
+            success = db.apply_human_correction(
+                detection_id="DET_001",
+                human_decision="CONFIRMED",
+                corrected_tiger_id="T-001",
+                actor="TEST_OFFICER",
+            )
+            self.assertTrue(success, "apply_human_correction must return True on success")
 
-        # Verify human_verified = 1 and verified_tiger_id persisted
-        from app.database.db import SCHEMA_PATH
-        import sqlite3
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        row = conn.execute("SELECT * FROM detections WHERE detection_id = ?", ("DET_001",)).fetchone()
-        self.assertEqual(row["human_verified"], 1, "human_verified must be 1 after correction")
-        self.assertEqual(row["verified_tiger_id"], "T-001", "verified_tiger_id must be stored")
-        self.assertEqual(row["human_decision"], "CONFIRMED")
-        self.assertEqual(row["human_actor"], "TEST_OFFICER")
-        # Original AI prediction must be preserved
-        self.assertAlmostEqual(row["reid_similarity"], 0.55, places=2, msg="Original AI similarity must be preserved")
-        self.assertAlmostEqual(row["original_reid_similarity"], 0.55, places=2, msg="Snapshot of original must be stored")
-        self.assertEqual(row["reid_confidence_level"], "MEDIUM_REVIEW_REQUIRED", "Original confidence level must be preserved")
-        conn.close()
+            # Verify human_verified = 1 and verified_tiger_id persisted
+            from app.database.db import SCHEMA_PATH
+            import sqlite3
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+            row = conn.execute("SELECT * FROM detections WHERE detection_id = ?", ("DET_001",)).fetchone()
+            self.assertEqual(row["human_verified"], 1, "human_verified must be 1 after correction")
+            self.assertEqual(row["verified_tiger_id"], "T-001", "verified_tiger_id must be stored")
+            self.assertEqual(row["human_decision"], "CONFIRMED")
+            self.assertEqual(row["human_actor"], "TEST_OFFICER")
+            # Original AI prediction must be preserved
+            self.assertAlmostEqual(row["reid_similarity"], 0.55, places=2, msg="Original AI similarity must be preserved")
+            self.assertAlmostEqual(row["original_reid_similarity"], 0.55, places=2, msg="Snapshot of original must be stored")
+            self.assertEqual(row["reid_confidence_level"], "MEDIUM_REVIEW_REQUIRED", "Original confidence level must be preserved")
+            conn.close()
 
-        # After correction it should no longer appear in pending (human_verified=1)
-        pending_after = db.get_pending_reviews()
-        ids_after = [r["detection_id"] for r in pending_after]
-        self.assertNotIn("DET_001", ids_after, "Confirmed detection must leave the review queue")
-
-        if db_path.exists():
-            db_path.unlink()
+            # After correction it should no longer appear in pending (human_verified=1)
+            pending_after = db.get_pending_reviews()
+            ids_after = [r["detection_id"] for r in pending_after]
+            self.assertNotIn("DET_001", ids_after, "Confirmed detection must leave the review queue")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_prolonged_absence_detection(self):
         """Absence detection must classify gaps correctly and suppress when insufficient data or cameras down."""
@@ -286,79 +287,81 @@ class TestTigerIntelligence(unittest.TestCase):
         from app.config import ALERT_ABSENCE_MULTIPLIER
         from app.database.db import TigerDatabase
 
-        db_path = Path("tiger-intelligence/database/test_absence.db")
-        if db_path.exists():
-            db_path.unlink()
-        db = TigerDatabase(db_path)
-        engine = AlertEngine(db)
+        temp_dir = tempfile.mkdtemp()
+        try:
+            db_path = Path(temp_dir) / "test_absence.db"
+            db = TigerDatabase(db_path)
+            engine = AlertEngine(db)
 
-        # Seed tiger + station
-        db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2020-01-01")
-        db.register_tiger("T-ABS", name="Absence Test Tiger")
+            # Seed tiger + station
+            db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2020-01-01")
+            db.register_tiger("T-ABS", name="Absence Test Tiger")
 
-        # Case A: insufficient history (< 3 sightings) → no alert
-        result_a = engine.check_absence_anomaly(
-            tiger_id="T-ABS",
-            sighting_timestamps=["2026-01-01T10:00:00", "2026-01-10T10:00:00"],  # only 2
-            known_station_ids=["C01"],
-            current_timestamp="2026-03-01T10:00:00",
-        )
-        self.assertIsNone(result_a, "Should suppress absence alert when fewer than 3 sightings in history")
+            # Case A: insufficient history (< 3 sightings) → no alert
+            result_a = engine.check_absence_anomaly(
+                tiger_id="T-ABS",
+                sighting_timestamps=["2026-01-01T10:00:00", "2026-01-10T10:00:00"],  # only 2
+                known_station_ids=["C01"],
+                current_timestamp="2026-03-01T10:00:00",
+            )
+            self.assertIsNone(result_a, "Should suppress absence alert when fewer than 3 sightings in history")
 
-        # Build a history with 9-day median interval
-        timestamps_9d = [
-            "2026-01-01T10:00:00",
-            "2026-01-10T10:00:00",  # +9d
-            "2026-01-19T10:00:00",  # +9d
-            "2026-01-28T10:00:00",  # +9d
-        ]
+            # Build a history with 9-day median interval
+            timestamps_9d = [
+                "2026-01-01T10:00:00",
+                "2026-01-10T10:00:00",  # +9d
+                "2026-01-19T10:00:00",  # +9d
+                "2026-01-28T10:00:00",  # +9d
+            ]
 
-        # Case B: gap = 11d (< 2*9=18d) → NORMAL, no alert
-        result_b = engine.check_absence_anomaly(
-            tiger_id="T-ABS",
-            sighting_timestamps=timestamps_9d,
-            known_station_ids=["C01"],
-            current_timestamp="2026-02-08T10:00:00",  # 11 days after last sighting
-        )
-        self.assertIsNone(result_b, "Gap below 2× median should not trigger an alert")
+            # Case B: gap = 11d (< 2*9=18d) → NORMAL, no alert
+            result_b = engine.check_absence_anomaly(
+                tiger_id="T-ABS",
+                sighting_timestamps=timestamps_9d,
+                known_station_ids=["C01"],
+                current_timestamp="2026-02-08T10:00:00",  # 11 days after last sighting
+            )
+            self.assertIsNone(result_b, "Gap below 2× median should not trigger an alert")
 
-        # Case C: gap = 22d (> 2×9=18d but < 3×9=27d) → WARNING severity
-        result_c = engine.check_absence_anomaly(
-            tiger_id="T-ABS",
-            sighting_timestamps=timestamps_9d,
-            known_station_ids=["C01"],
-            current_timestamp="2026-02-19T10:00:00",  # 22 days after last
-        )
-        self.assertIsNotNone(result_c, "Gap > 2× median must trigger a WARNING absence alert")
-        self.assertEqual(result_c["alert_type"], "PROLONGED_ABSENCE")
-        self.assertEqual(result_c["severity"], "WARNING")
-        self.assertIn("gap_days", result_c["evidence_data"])
+            # Case C: gap = 22d (> 2×9=18d but < 3×9=27d) → WARNING severity
+            result_c = engine.check_absence_anomaly(
+                tiger_id="T-ABS",
+                sighting_timestamps=timestamps_9d,
+                known_station_ids=["C01"],
+                current_timestamp="2026-02-19T10:00:00",  # 22 days after last
+            )
+            self.assertIsNotNone(result_c, "Gap > 2× median must trigger a WARNING absence alert")
+            self.assertEqual(result_c["alert_type"], "PROLONGED_ABSENCE")
+            self.assertEqual(result_c["severity"], "WARNING")
+            self.assertIn("gap_days", result_c["evidence_data"])
 
-        # Case D: gap = 35d (> 3×9=27d) → CRITICAL severity
-        result_d = engine.check_absence_anomaly(
-            tiger_id="T-ABS",
-            sighting_timestamps=timestamps_9d,
-            known_station_ids=["C01"],
-            current_timestamp="2026-03-04T10:00:00",  # 35 days after last
-        )
-        self.assertIsNotNone(result_d, "Gap > 3× median must trigger CRITICAL absence alert")
-        self.assertEqual(result_d["severity"], "CRITICAL")
+            # Case D: gap = 35d (> 3×9=27d) → CRITICAL severity
+            result_d = engine.check_absence_anomaly(
+                tiger_id="T-ABS",
+                sighting_timestamps=timestamps_9d,
+                known_station_ids=["C01"],
+                current_timestamp="2026-03-04T10:00:00",  # 35 days after last
+            )
+            self.assertIsNotNone(result_d, "Gap > 3× median must trigger CRITICAL absence alert")
+            self.assertEqual(result_d["severity"], "CRITICAL")
 
-        # Case E: cameras were inactive during the gap → alert suppressed (survey-effort correction)
-        # Deactivate C01 before the gap period
-        import sqlite3
-        conn = sqlite3.connect(str(db_path))
-        conn.execute("UPDATE camera_stations SET active_to = '2026-01-29' WHERE station_id = 'C01'")
-        conn.commit()
-        conn.close()
+            # Case E: cameras were inactive during the gap → alert suppressed (survey-effort correction)
+            # Deactivate C01 before the gap period
+            import sqlite3
+            conn = sqlite3.connect(str(db_path))
+            conn.execute("UPDATE camera_stations SET active_to = '2026-01-29' WHERE station_id = 'C01'")
+            conn.commit()
+            conn.close()
 
-        result_e = engine.check_absence_anomaly(
-            tiger_id="T-ABS",
-            sighting_timestamps=timestamps_9d,
-            known_station_ids=["C01"],
-            current_timestamp="2026-03-04T10:00:00",
-        )
-        self.assertIsNone(result_e, "Absence alert must be suppressed when all known stations are inactive")
+            result_e = engine.check_absence_anomaly(
+                tiger_id="T-ABS",
+                sighting_timestamps=timestamps_9d,
+                known_station_ids=["C01"],
+                current_timestamp="2026-03-04T10:00:00",
+            )
+            self.assertIsNone(result_e, "Absence alert must be suppressed when all known stations are inactive")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_absence_edge_cases(self):
         """Absence detection must handle newly enrolled tigers, clock drift, and missing GPS robustly."""
@@ -366,111 +369,109 @@ class TestTigerIntelligence(unittest.TestCase):
         from app.database.db import TigerDatabase
         from app.occupancy.mcp import calculate_tiger_home_range
 
-        db_path = Path("tiger-intelligence/database/test_absence_edges.db")
-        if db_path.exists():
-            db_path.unlink()
-        db = TigerDatabase(db_path)
-        engine = AlertEngine(db)
+        temp_dir = tempfile.mkdtemp()
+        try:
+            db_path = Path(temp_dir) / "test_absence_edges.db"
+            db = TigerDatabase(db_path)
+            engine = AlertEngine(db)
 
-        # 1. Newly enrolled tiger (0 sightings or 1 sighting)
-        db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2020-01-01")
-        db.register_tiger("T-NEW", name="Newly Enrolled Tiger")
+            # 1. Newly enrolled tiger (0 sightings or 1 sighting)
+            db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2020-01-01")
+            db.register_tiger("T-NEW", name="Newly Enrolled Tiger")
 
-        res_zero = engine.check_absence_anomaly("T-NEW", [], ["C01"], "2026-03-01T10:00:00")
-        self.assertIsNone(res_zero, "0 sightings must never trigger absence alert")
+            res_zero = engine.check_absence_anomaly("T-NEW", [], ["C01"], "2026-03-01T10:00:00")
+            self.assertIsNone(res_zero, "0 sightings must never trigger absence alert")
 
-        res_one = engine.check_absence_anomaly("T-NEW", ["2026-01-01T10:00:00"], ["C01"], "2026-03-01T10:00:00")
-        self.assertIsNone(res_one, "1 sighting must never trigger absence alert")
+            res_one = engine.check_absence_anomaly("T-NEW", ["2026-01-01T10:00:00"], ["C01"], "2026-03-01T10:00:00")
+            self.assertIsNone(res_one, "1 sighting must never trigger absence alert")
 
-        # 2. Clock drift: sighting in the future relative to check timestamp
-        history_future = ["2026-01-01T10:00:00", "2026-01-10T10:00:00", "2026-01-20T10:00:00", "2026-05-01T10:00:00"]
-        res_future = engine.check_absence_anomaly("T-NEW", history_future, ["C01"], "2026-03-01T10:00:00")
-        self.assertIsNone(res_future, "Future timestamps (clock drift) must not trigger absence alert")
+            # 2. Clock drift: sighting in the future relative to check timestamp
+            history_future = ["2026-01-01T10:00:00", "2026-01-10T10:00:00", "2026-01-20T10:00:00", "2026-05-01T10:00:00"]
+            res_future = engine.check_absence_anomaly("T-NEW", history_future, ["C01"], "2026-03-01T10:00:00")
+            self.assertIsNone(res_future, "Future timestamps (clock drift) must not trigger absence alert")
 
-        # 3. Missing / None GPS coordinates in sightings history must not crash spatial calculator
-        sightings_with_none_gps = [
-            {"latitude": None, "longitude": None, "timestamp": "2026-01-01T10:00:00", "station_id": "C01"},
-            {"latitude": 21.715, "longitude": 79.312, "timestamp": "2026-01-10T10:00:00", "station_id": "C01"},
-            {"latitude": None, "longitude": None, "timestamp": "2026-01-20T10:00:00", "station_id": "C01"},
-        ]
-        range_stats = calculate_tiger_home_range(sightings_with_none_gps)
-        self.assertEqual(range_stats["total_sightings"], 3)
-        self.assertEqual(range_stats["centroid_lat"], 21.715)
-        self.assertEqual(range_stats["centroid_lon"], 79.312)
-
-        if db_path.exists():
-            db_path.unlink()
+            # 3. Missing / None GPS coordinates in sightings history must not crash spatial calculator
+            sightings_with_none_gps = [
+                {"latitude": None, "longitude": None, "timestamp": "2026-01-01T10:00:00", "station_id": "C01"},
+                {"latitude": 21.715, "longitude": 79.312, "timestamp": "2026-01-10T10:00:00", "station_id": "C01"},
+                {"latitude": None, "longitude": None, "timestamp": "2026-01-20T10:00:00", "station_id": "C01"},
+            ]
+            range_stats = calculate_tiger_home_range(sightings_with_none_gps)
+            self.assertEqual(range_stats["total_sightings"], 3)
+            self.assertEqual(range_stats["centroid_lat"], 21.715)
+            self.assertEqual(range_stats["centroid_lon"], 79.312)
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_human_review_end_to_end_and_restart(self):
         """Verify full lifecycle: uncertain detection -> review queue -> human reassign -> DB restart -> verified identity used."""
         from app.database.db import TigerDatabase
-        db_path = Path("tiger-intelligence/database/test_review_lifecycle.db")
-        if db_path.exists():
-            db_path.unlink()
-        
-        # Step 1: Initial pipeline run writes uncertain detection
-        db = TigerDatabase(db_path)
-        db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2026-01-01")
-        db.register_tiger("T-001", name="Tiger One")
-        db.register_tiger("T-002", name="Tiger Two")
-        db.record_image("IMG_AMB_01", "/dummy/img.jpg", "img.jpg", 1024, "C01", station_id="C01")
-        db.record_detection(
-            detection_id="DET_AMB_01",
-            image_id="IMG_AMB_01",
-            station_id="C01",
-            timestamp="2026-08-05T12:00:00",
-            is_animal=True,
-            is_human=False,
-            is_vehicle=False,
-            is_blank=False,
-            detected_species="tiger",
-            species_confidence=0.92,
-            reid_matched_tiger_id="T-001",
-            reid_similarity=0.58,  # In [0.45, 0.65) review band
-            reid_confidence_level="MEDIUM_REVIEW_REQUIRED",
-        )
+        temp_dir = tempfile.mkdtemp()
+        try:
+            db_path = Path(temp_dir) / "test_review_lifecycle.db"
+            
+            # Step 1: Initial pipeline run writes uncertain detection
+            db = TigerDatabase(db_path)
+            db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2026-01-01")
+            db.register_tiger("T-001", name="Tiger One")
+            db.register_tiger("T-002", name="Tiger Two")
+            db.record_image("IMG_AMB_01", "/dummy/img.jpg", "img.jpg", 1024, "C01", station_id="C01")
+            db.record_detection(
+                detection_id="DET_AMB_01",
+                image_id="IMG_AMB_01",
+                station_id="C01",
+                timestamp="2026-08-05T12:00:00",
+                is_animal=True,
+                is_human=False,
+                is_vehicle=False,
+                is_blank=False,
+                detected_species="tiger",
+                species_confidence=0.92,
+                reid_matched_tiger_id="T-001",
+                reid_similarity=0.58,  # In [0.45, 0.65) review band
+                reid_confidence_level="MEDIUM_REVIEW_REQUIRED",
+            )
 
-        # Step 2: Query review queue
-        pending = db.get_pending_reviews()
-        self.assertEqual(len(pending), 1)
-        self.assertEqual(pending[0]["detection_id"], "DET_AMB_01")
-        self.assertEqual(pending[0]["reid_matched_tiger_id"], "T-001")
+            # Step 2: Query review queue
+            pending = db.get_pending_reviews()
+            self.assertEqual(len(pending), 1)
+            self.assertEqual(pending[0]["detection_id"], "DET_AMB_01")
+            self.assertEqual(pending[0]["reid_matched_tiger_id"], "T-001")
 
-        # Step 3: Officer reassigns match to T-002
-        success = db.apply_human_correction(
-            detection_id="DET_AMB_01",
-            human_decision="REASSIGNED",
-            corrected_tiger_id="T-002",
-            actor="OFFICER_PATIL",
-        )
-        self.assertTrue(success)
+            # Step 3: Officer reassigns match to T-002
+            success = db.apply_human_correction(
+                detection_id="DET_AMB_01",
+                human_decision="REASSIGNED",
+                corrected_tiger_id="T-002",
+                actor="OFFICER_PATIL",
+            )
+            self.assertTrue(success)
 
-        # Step 4: Simulate application restart (new database instance & connection)
-        del db
-        db_restarted = TigerDatabase(db_path)
+            # Step 4: Simulate application restart (new database instance & connection)
+            del db
+            db_restarted = TigerDatabase(db_path)
 
-        # Step 5: Verify review queue is now empty
-        pending_after = db_restarted.get_pending_reviews()
-        self.assertEqual(len(pending_after), 0, "Reviewed item must not appear in pending queue")
+            # Step 5: Verify review queue is now empty
+            pending_after = db_restarted.get_pending_reviews()
+            self.assertEqual(len(pending_after), 0, "Reviewed item must not appear in pending queue")
 
-        # Step 6: Verify persisted record has verified identity and original AI prediction
-        with db_restarted._get_connection() as conn:
-            row = dict(conn.execute("SELECT * FROM detections WHERE detection_id = 'DET_AMB_01'").fetchone())
-            self.assertEqual(row["human_verified"], 1)
-            self.assertEqual(row["verified_tiger_id"], "T-002")
-            self.assertEqual(row["human_decision"], "REASSIGNED")
-            self.assertEqual(row["human_actor"], "OFFICER_PATIL")
-            # Crucial: Original AI prediction is untouched
-            self.assertEqual(row["original_reid_tiger_id"], "T-001")
-            self.assertAlmostEqual(row["original_reid_similarity"], 0.58, places=2)
-            self.assertEqual(row["original_reid_confidence_level"], "MEDIUM_REVIEW_REQUIRED")
+            # Step 6: Verify persisted record has verified identity and original AI prediction
+            with db_restarted._get_connection() as conn:
+                row = dict(conn.execute("SELECT * FROM detections WHERE detection_id = 'DET_AMB_01'").fetchone())
+                self.assertEqual(row["human_verified"], 1)
+                self.assertEqual(row["verified_tiger_id"], "T-002")
+                self.assertEqual(row["human_decision"], "REASSIGNED")
+                self.assertEqual(row["human_actor"], "OFFICER_PATIL")
+                # Crucial: Original AI prediction is untouched
+                self.assertEqual(row["original_reid_tiger_id"], "T-001")
+                self.assertAlmostEqual(row["original_reid_similarity"], 0.58, places=2)
+                self.assertEqual(row["original_reid_confidence_level"], "MEDIUM_REVIEW_REQUIRED")
 
-            # Audit log entry exists
-            audit_rows = conn.execute("SELECT * FROM audit_log WHERE entity_id = 'DET_AMB_01'").fetchall()
-            self.assertGreater(len(audit_rows), 0, "Audit log must record human review decision")
-
-        if db_path.exists():
-            db_path.unlink()
+                # Audit log entry exists
+                audit_rows = conn.execute("SELECT * FROM audit_log WHERE entity_id = 'DET_AMB_01'").fetchall()
+                self.assertGreater(len(audit_rows), 0, "Audit log must record human review decision")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_database_idempotency_and_integrity(self):
         """Verify database idempotency on duplicate ingestion, deterministic alert deduplication, and FK enforcement."""
@@ -478,79 +479,78 @@ class TestTigerIntelligence(unittest.TestCase):
         from app.database.db import TigerDatabase
         import sqlite3
 
-        db_path = Path("tiger-intelligence/database/test_idempotency.db")
-        if db_path.exists():
-            db_path.unlink()
-        db = TigerDatabase(db_path)
-        engine = AlertEngine(db)
+        temp_dir = tempfile.mkdtemp()
+        try:
+            db_path = Path(temp_dir) / "test_idempotency.db"
+            db = TigerDatabase(db_path)
+            engine = AlertEngine(db)
 
-        # 1. Foreign Key enforcement on invalid station
-        db.register_tiger("T-001", name="Tiger Alpha")
-        with self.assertRaises(sqlite3.IntegrityError):
-            with db._get_connection() as conn:
-                # Invalid station_id 'NON_EXISTENT_STATION'
-                conn.execute(
-                    "INSERT INTO images (image_id, original_path, source_folder, file_name, station_id) "
-                    "VALUES ('IMG_ERR', '/dummy/path.jpg', 'ROOT', 'test.jpg', 'NON_EXISTENT_STATION')"
-                )
+            # 1. Foreign Key enforcement on invalid station
+            db.register_tiger("T-001", name="Tiger Alpha")
+            with self.assertRaises(sqlite3.IntegrityError):
+                with db._get_connection() as conn:
+                    # Invalid station_id 'NON_EXISTENT_STATION'
+                    conn.execute(
+                        "INSERT INTO images (image_id, original_path, source_folder, file_name, station_id) "
+                        "VALUES ('IMG_ERR', '/dummy/path.jpg', 'ROOT', 'test.jpg', 'NON_EXISTENT_STATION')"
+                    )
 
-        # 2. Acceptance of NULL station_id on alerts (e.g. absence alert)
-        db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2020-01-01")
-        db.record_alert(
-            alert_id="ALT_ABS_TEST_001",
-            alert_type="PROLONGED_ABSENCE",
-            severity="CRITICAL",
-            tiger_id="T-001",
-            station_id=None,  # Valid NULL FK
-            timestamp="2026-08-10T10:00:00",
-            title="Absence Test",
-            explanation="Explanation",
-            evidence_data={"gap_days": 30.0},
-        )
-        active_alerts = db.get_active_alerts()
-        self.assertEqual(len(active_alerts), 1)
-        self.assertIsNone(active_alerts[0]["station_id"])
+            # 2. Acceptance of NULL station_id on alerts (e.g. absence alert)
+            db.upsert_station("C01", 21.715, 79.312, survey_id="S1", active_from="2020-01-01")
+            db.record_alert(
+                alert_id="ALT_ABS_TEST_001",
+                alert_type="PROLONGED_ABSENCE",
+                severity="CRITICAL",
+                tiger_id="T-001",
+                station_id=None,  # Valid NULL FK
+                timestamp="2026-08-10T10:00:00",
+                title="Absence Test",
+                explanation="Explanation",
+                evidence_data={"gap_days": 30.0},
+            )
+            active_alerts = db.get_active_alerts()
+            self.assertEqual(len(active_alerts), 1)
+            self.assertIsNone(active_alerts[0]["station_id"])
 
-        # 3. Idempotent Alert deduplication (running same alert twice produces 1 row)
-        db.record_alert(
-            alert_id="ALT_ABS_TEST_001",
-            alert_type="PROLONGED_ABSENCE",
-            severity="CRITICAL",
-            tiger_id="T-001",
-            station_id=None,
-            timestamp="2026-08-10T10:00:00",
-            title="Absence Test",
-            explanation="Explanation",
-            evidence_data={"gap_days": 30.0},
-        )
-        active_alerts_after = db.get_active_alerts()
-        self.assertEqual(len(active_alerts_after), 1, "Duplicate alert_id must not create duplicate row")
+            # 3. Idempotent Alert deduplication (running same alert twice produces 1 row)
+            db.record_alert(
+                alert_id="ALT_ABS_TEST_001",
+                alert_type="PROLONGED_ABSENCE",
+                severity="CRITICAL",
+                tiger_id="T-001",
+                station_id=None,
+                timestamp="2026-08-10T10:00:00",
+                title="Absence Test",
+                explanation="Explanation",
+                evidence_data={"gap_days": 30.0},
+            )
+            active_alerts_after = db.get_active_alerts()
+            self.assertEqual(len(active_alerts_after), 1, "Duplicate alert_id must not create duplicate row")
 
-        # 4. Idempotent Movement ingestion
-        db.record_image("IMG_01", "/dummy/1.jpg", "1.jpg", 100, "C01", station_id="C01")
-        db.record_detection(
-            detection_id="DET_01",
-            image_id="IMG_01",
-            station_id="C01",
-            timestamp="2026-08-01T10:00:00",
-            is_animal=True,
-            is_human=False,
-            is_vehicle=False,
-            is_blank=False,
-            detected_species="tiger",
-            species_confidence=0.95,
-            reid_matched_tiger_id="T-001",
-            reid_similarity=0.95,
-            reid_confidence_level="HIGH",
-        )
-        db.record_movement("T-001", "DET_01", "C01", "2026-08-01T10:00:00", 21.715, 79.312)
-        db.record_movement("T-001", "DET_01", "C01", "2026-08-01T10:00:00", 21.715, 79.312)  # Duplicate run
+            # 4. Idempotent Movement ingestion
+            db.record_image("IMG_01", "/dummy/1.jpg", "1.jpg", 100, "C01", station_id="C01")
+            db.record_detection(
+                detection_id="DET_01",
+                image_id="IMG_01",
+                station_id="C01",
+                timestamp="2026-08-01T10:00:00",
+                is_animal=True,
+                is_human=False,
+                is_vehicle=False,
+                is_blank=False,
+                detected_species="tiger",
+                species_confidence=0.95,
+                reid_matched_tiger_id="T-001",
+                reid_similarity=0.95,
+                reid_confidence_level="HIGH",
+            )
+            db.record_movement("T-001", "DET_01", "C01", "2026-08-01T10:00:00", 21.715, 79.312)
+            db.record_movement("T-001", "DET_01", "C01", "2026-08-01T10:00:00", 21.715, 79.312)  # Duplicate run
 
-        history = db.get_tiger_movement_history("T-001")
-        self.assertEqual(len(history), 1, "Duplicate movement record must be ignored")
-
-        if db_path.exists():
-            db_path.unlink()
+            history = db.get_tiger_movement_history("T-001")
+            self.assertEqual(len(history), 1, "Duplicate movement record must be ignored")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_offline_production_reid_flow(self):
         """Verify the full production Re-ID flow operates 100% offline without internet dependency."""
@@ -558,44 +558,42 @@ class TestTigerIntelligence(unittest.TestCase):
         from app.reid.extractor import DEFAULT_REID_MODEL, TigerStripeFeatureExtractor
         from app.reid.matcher import TigerReIDMatcher
 
-        db_path = Path("tiger-intelligence/database/test_reid_flow.db")
-        if db_path.exists():
-            db_path.unlink()
-        db = TigerDatabase(db_path)
+        temp_dir = tempfile.mkdtemp()
+        try:
+            db_path = Path(temp_dir) / "test_reid_flow.db"
+            db = TigerDatabase(db_path)
 
-        extractor = TigerStripeFeatureExtractor(model_name=DEFAULT_REID_MODEL)
-        matcher = TigerReIDMatcher()
+            extractor = TigerStripeFeatureExtractor(model_name=DEFAULT_REID_MODEL)
+            matcher = TigerReIDMatcher()
 
-        # Extract features from synthetic tiger crops
-        np.random.seed(42)
-        crop_a = np.random.randint(50, 200, (224, 224, 3), dtype=np.uint8)
-        emb_a = extractor.extract_embedding(crop_a)
+            # Extract features from synthetic tiger crops
+            np.random.seed(42)
+            crop_a = np.random.randint(50, 200, (224, 224, 3), dtype=np.uint8)
+            emb_a = extractor.extract_embedding(crop_a)
 
-        # Register T-001 in database
-        db.register_tiger("T-001", name="Registered Tiger", embedding=emb_a, flank_side="left_candidate")
-        gallery = db.get_tiger_reference_gallery()
-        self.assertEqual(len(gallery), 1)
+            # Register T-001 in database
+            db.register_tiger("T-001", name="Registered Tiger", embedding=emb_a, flank_side="left_candidate")
+            gallery = db.get_tiger_reference_gallery()
+            self.assertEqual(len(gallery), 1)
 
-        # Case 1: Exact / close query -> HIGH confidence match
-        query_close = emb_a + np.random.randn(768).astype(np.float32) * 0.01
-        query_close /= np.linalg.norm(query_close)
-        res_close = matcher.match_candidates([("left_candidate", query_close)], gallery)
-        self.assertEqual(res_close.matched_tiger_id, "T-001")
-        self.assertEqual(res_close.confidence_level, "HIGH")
-        self.assertFalse(res_close.is_new_individual)
+            # Case 1: Exact / close query -> HIGH confidence match
+            query_close = emb_a + np.random.randn(768).astype(np.float32) * 0.01
+            query_close /= np.linalg.norm(query_close)
+            res_close = matcher.match_candidates([("left_candidate", query_close)], gallery)
+            self.assertEqual(res_close.matched_tiger_id, "T-001")
+            self.assertEqual(res_close.confidence_level, "HIGH")
+            self.assertFalse(res_close.is_new_individual)
 
-        # Case 2: Orthogonal vector -> LOW_NEW_INDIVIDUAL
-        ortho = np.random.randn(768).astype(np.float32)
-        ortho -= np.dot(ortho, emb_a) * emb_a
-        ortho /= np.linalg.norm(ortho)
-        res_unk = matcher.match_candidates([("left_candidate", ortho)], gallery)
-        self.assertTrue(res_unk.is_new_individual)
-        self.assertEqual(res_unk.confidence_level, "LOW_NEW_INDIVIDUAL")
-
-        if db_path.exists():
-            db_path.unlink()
+            # Case 2: Orthogonal vector -> LOW_NEW_INDIVIDUAL
+            ortho = np.random.randn(768).astype(np.float32)
+            ortho -= np.dot(ortho, emb_a) * emb_a
+            ortho /= np.linalg.norm(ortho)
+            res_unk = matcher.match_candidates([("left_candidate", ortho)], gallery)
+            self.assertTrue(res_unk.is_new_individual)
+            self.assertEqual(res_unk.confidence_level, "LOW_NEW_INDIVIDUAL")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
     unittest.main()
-

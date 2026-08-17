@@ -55,7 +55,7 @@ export const intelligenceService = {
     detectionId: string,
     decision: "CONFIRMED" | "REJECTED" | "REASSIGNED" | "NEW_TIGER",
     correctedTigerId?: string | null,
-    actor: string = "OFFICER_PATIL",
+    actor: string = "OFFICER_ON_DUTY",
     notes: string = ""
   ) =>
     api.post<{
@@ -97,33 +97,40 @@ export const intelligenceService = {
 
   dismissAlert: (alertId: string) => api.post<{ status: string; alert_id: string }>(`/alerts/${alertId}/dismiss`),
 
-  acknowledgeAlert: (alertId: string, actor: string = "OFFICER_PATIL", notes: string = "") =>
+  acknowledgeAlert: (alertId: string, actor: string = "OFFICER_ON_DUTY", notes: string = "") =>
     api.post<{ status: string; alert: any }>(`/alerts/${alertId}/acknowledge`, {
       action: "ACKNOWLEDGE",
       actor,
       notes,
     }),
 
-  resolveAlert: (alertId: string, actor: string = "OFFICER_PATIL", notes: string = "") =>
+  resolveAlert: (alertId: string, actor: string = "OFFICER_ON_DUTY", notes: string = "") =>
     api.post<{ status: string; alert: any }>(`/alerts/${alertId}/resolve`, {
       action: "RESOLVE",
       actor,
       notes,
     }),
 
-  markFalsePositive: (alertId: string, actor: string = "OFFICER_PATIL", notes: string = "") =>
+  markFalsePositive: (alertId: string, actor: string = "OFFICER_ON_DUTY", notes: string = "") =>
     api.post<{ status: string; alert: any }>(`/alerts/${alertId}/false-positive`, {
       action: "FALSE_POSITIVE",
       actor,
       notes,
     }),
 
-  suppressAlert: (alertId: string, actor: string = "OFFICER_PATIL", notes: string = "") =>
+  suppressAlert: (alertId: string, actor: string = "OFFICER_ON_DUTY", notes: string = "") =>
     api.post<{ status: string; alert: any }>(`/alerts/${alertId}/suppress`, {
       action: "SUPPRESS",
       actor,
       notes,
     }),
+
+  // Database Backup & Disaster Recovery
+  getBackups: () => api.get<{ backups: any[] }>("/system/backups"),
+  createBackup: (note?: string) => api.post<any>("/system/backup", { note }),
+  validateBackup: (filename: string) => api.get<any>(`/system/backups/${filename}/validate`),
+  restoreBackup: (filename: string, confirm: boolean = true) =>
+    api.post<any>("/system/restore", { filename, confirm }),
 
   // Images
   getImages: (params?: {

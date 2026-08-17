@@ -15,6 +15,9 @@ if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
 else:
     _PROJECT_ROOT = _CURRENT_DIR.parent.parent
 
+from app.database.backup import TigerBackupManager, BackupInfo
+from dataclasses import asdict
+
 SCHEMA_PATH = _PROJECT_ROOT / "database" / "schema.sql"
 if not SCHEMA_PATH.exists():
     SCHEMA_PATH = _CURRENT_DIR / "schema.sql"
@@ -28,6 +31,7 @@ class TigerDatabase:
     def __init__(self, db_path: Optional[Path] = None):
         self.db_path = Path(db_path) if db_path else DEFAULT_DB_PATH
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.backup_mgr = TigerBackupManager(self.db_path)
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
@@ -92,6 +96,126 @@ class TigerDatabase:
                 completed_at TEXT
             )
             """)
+
+            # ── Authentication tables (idempotent, safe to run on existing DBs) ──
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS officers (
+                id            TEXT PRIMARY KEY,
+                officer_id    TEXT UNIQUE NOT NULL,
+                display_name  TEXT NOT NULL,
+                role          TEXT NOT NULL DEFAULT 'OFFICER',
+                password_hash TEXT NOT NULL,
+                failed_attempts INTEGER DEFAULT 0,
+                locked_until  TEXT,
+                is_active     INTEGER DEFAULT 1,
+                created_at    TEXT DEFAULT (datetime('now','utc')),
+                last_login_at TEXT
+            )
+            """)
+
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                token       TEXT PRIMARY KEY,
+                officer_id  TEXT NOT NULL REFERENCES officers(officer_id) ON DELETE CASCADE,
+                expires_at  TEXT NOT NULL,
+                created_at  TEXT DEFAULT (datetime('now','utc')),
+                user_agent  TEXT
+            )
+            """)
+
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS workstation (
+                key   TEXT PRIMARY KEY,
+                value TEXT
+            )
+            """)
+
+    # ── Workstation Configuration ─────────────────────────────────────────────
+
+    def get_workstation_config(self) -> dict:
+        """Return all workstation key-value configuration pairs."""
+        with self._get_connection() as conn:
+            rows = conn.execute("SELECT key, value FROM workstation").fetchall()
+            return {r["key"]: r["value"] for r in rows}
+
+    def set_workstation_key(self, key: str, value: str) -> None:
+        """Upsert a workstation configuration value."""
+        with self._get_connection() as conn:
+            conn.execute(
+                "INSERT INTO workstation (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (key, value),
+            )
+
+    # ── Officer Management ────────────────────────────────────────────────────
+
+    def create_officer(self, officer_id: str, display_name: str, role: str, password_hash: str) -> str:
+        """Create a new officer record. Returns the generated UUID."""
+        import uuid
+        uid = str(uuid.uuid4())
+        with self._get_connection() as conn:
+            conn.execute(
+                "INSERT INTO officers (id, officer_id, display_name, role, password_hash) VALUES (?, ?, ?, ?, ?)",
+                (uid, officer_id, display_name, role, password_hash),
+            )
+        return uid
+
+    def get_officer_by_officer_id(self, officer_id: str) -> Optional[dict]:
+        """Return the full officer row for a given officer_id string, or None."""
+        with self._get_connection() as conn:
+            row = conn.execute(
+                "SELECT * FROM officers WHERE officer_id = ?", (officer_id,)
+            ).fetchone()
+            return dict(row) if row else None
+
+    def officer_count(self) -> int:
+        """Return total number of registered officers."""
+        with self._get_connection() as conn:
+            return conn.execute("SELECT COUNT(*) FROM officers").fetchone()[0]
+
+    def list_officers(self) -> List[dict]:
+        """Return all officers (password_hash excluded)."""
+        with self._get_connection() as conn:
+            rows = conn.execute(
+                "SELECT id, officer_id, display_name, role, failed_attempts, locked_until, is_active, created_at, last_login_at FROM officers ORDER BY created_at"
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def update_last_login(self, officer_id: str) -> None:
+        """Record a successful login timestamp and clear failed attempts."""
+        with self._get_connection() as conn:
+            conn.execute(
+                "UPDATE officers SET last_login_at = datetime('now','utc'), failed_attempts = 0, locked_until = NULL WHERE officer_id = ?",
+                (officer_id,),
+            )
+
+    def increment_failed_attempts(self, officer_id: str, locked_until_iso: Optional[str] = None) -> None:
+        """Increment failed login counter and optionally set a lockout expiry."""
+        with self._get_connection() as conn:
+            conn.execute(
+                "UPDATE officers SET failed_attempts = failed_attempts + 1, locked_until = ? WHERE officer_id = ?",
+                (locked_until_iso, officer_id),
+            )
+
+    def reset_failed_attempts(self, officer_id: str) -> None:
+        """Clear failed attempt counter and lockout."""
+        with self._get_connection() as conn:
+            conn.execute(
+                "UPDATE officers SET failed_attempts = 0, locked_until = NULL WHERE officer_id = ?",
+                (officer_id,),
+            )
+
+    def deactivate_officer(self, officer_id: str) -> None:
+        """Deactivate an officer account (does not delete)."""
+        with self._get_connection() as conn:
+            conn.execute("UPDATE officers SET is_active = 0 WHERE officer_id = ?", (officer_id,))
+
+    def reset_officer_password(self, officer_id: str, new_password_hash: str) -> None:
+        """Replace an officer's password hash (admin reset)."""
+        with self._get_connection() as conn:
+            conn.execute(
+                "UPDATE officers SET password_hash = ?, failed_attempts = 0, locked_until = NULL WHERE officer_id = ?",
+                (new_password_hash, officer_id),
+            )
 
     # ── Camera Stations & Survey History ───────────────────────────────────────
 
@@ -816,3 +940,37 @@ class TigerDatabase:
                 tuple(station_ids) + (as_of, as_of)
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def create_backup(self, actor: str = "OFFICER_ON_DUTY", note: Optional[str] = None) -> dict:
+        """Create a consistent offline backup snapshot and record audit trail."""
+        info = self.backup_mgr.create_backup(actor=actor, note=note)
+        self.log_audit(
+            entity_type="system",
+            entity_id=info.backup_id,
+            action="database_backup",
+            actor=actor,
+            details=f"Offline database backup created: {info.filename} ({info.size_bytes} bytes). Checksum: {info.sha256[:12]}...",
+        )
+        return asdict(info)
+
+    def list_backups(self) -> List[dict]:
+        """List all available offline backups."""
+        return [asdict(b) for b in self.backup_mgr.list_backups()]
+
+    def validate_backup(self, backup_name: str) -> dict:
+        """Validate integrity and foreign keys of a backup file."""
+        target_path = self.backup_mgr.backup_dir / Path(backup_name).name
+        valid, msg, counts = self.backup_mgr.validate_backup_file(target_path)
+        return {"filename": target_path.name, "is_valid": valid, "message": msg, "table_counts": counts}
+
+    def restore_backup(self, backup_name: str, actor: str = "OFFICER_ON_DUTY") -> dict:
+        """Restore database atomically from a verified backup and record audit trail."""
+        res = self.backup_mgr.restore_backup(backup_name, actor=actor)
+        self.log_audit(
+            entity_type="system",
+            entity_id=backup_name,
+            action="database_restored",
+            actor=actor,
+            details=f"Database restored from backup: {backup_name}. All tables verified.",
+        )
+        return res

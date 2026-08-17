@@ -5,7 +5,6 @@ import { IntelligencePipeline } from "@/components/tigertrack/IntelligencePipeli
 import { HowItWorks } from "@/components/tigertrack/HowItWorks";
 import { IntelligenceDashboard } from "@/components/tigertrack/IntelligenceDashboard";
 import { WildlifeMap } from "@/components/tigertrack/WildlifeMap";
-import { AlertSection } from "@/components/tigertrack/AlertSection";
 import { FinalCTA } from "@/components/tigertrack/FinalCTA";
 import { Footer } from "@/components/tigertrack/Footer";
 
@@ -36,7 +35,6 @@ function Index() {
       <HowItWorks />
       <IntelligenceDashboard />
       <WildlifeMap />
-      <AlertSection />
       <FinalCTA />
       <Footer />
     </main>

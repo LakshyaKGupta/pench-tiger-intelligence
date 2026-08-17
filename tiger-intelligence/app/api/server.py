@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Response, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -45,6 +45,16 @@ from app.ingestion.adapter import (
 from app.occupancy.mcp import calculate_tiger_home_range
 from app.pipeline import TigerIntelligencePipeline
 from app.storage.manager import StorageManager, get_storage_manager
+from app.auth.hashing import hash_password, verify_password
+from app.auth.sessions import (
+    create_session, get_session, revoke_session, purge_expired_sessions,
+    is_locked_out, lockout_expiry_iso,
+)
+from app.auth.models import (
+    WorkstationSetupRequest, LoginRequest, CreateOfficerRequest,
+    ResetPasswordRequest, LoginResponse, WorkstationStatus,
+)
+from app.auth.middleware import get_current_session, require_admin
 
 # SSE real-time broadcast queues
 pipeline_event_queues: List[asyncio.Queue] = []
@@ -67,10 +77,28 @@ if not DB_PATH.exists():
 if not DB_PATH.exists():
     DB_PATH = storage.database_path
 
+from contextlib import asynccontextmanager
+
+# Shared Database & Alert Engine instances
+db = TigerDatabase(DB_PATH)
+alert_engine = AlertEngine(db)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Expose shared db on app.state and purge expired sessions on boot."""
+    app.state.db = db
+    with db._get_connection() as conn:
+        purged = purge_expired_sessions(conn)
+    print(f"[AUTH] Purged {purged} expired session(s) on startup.")
+    yield
+
+
 app = FastAPI(
     title="TIGERTRACK AI — Pench Tiger Intelligence Local API",
     description="Offline REST API Bridge for Wildlife Intelligence, Spatial Analysis & Ingestion",
     version="3.2.0",
+    lifespan=lifespan,
 )
 
 # Enable CORS for local workstation frontends
@@ -90,10 +118,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Shared Database & Alert Engine instances
-db = TigerDatabase(DB_PATH)
-alert_engine = AlertEngine(db)
-
 # In-memory pipeline job tracker
 pipeline_jobs: Dict[str, dict] = {}
 
@@ -103,13 +127,13 @@ pipeline_jobs: Dict[str, dict] = {}
 class HumanReviewRequest(BaseModel):
     decision: str = Field(..., description="CONFIRMED, REJECTED, REASSIGNED, or NEW_TIGER")
     corrected_tiger_id: Optional[str] = Field(None, description="Assigned tiger ID if confirmed/reassigned")
-    actor: Optional[str] = Field("OFFICER_PATIL", description="Identity of forest officer reviewing")
+    actor: Optional[str] = Field(None, description="Deprecated: actor is derived from session token server-side")
     notes: Optional[str] = Field("", description="Optional justification note")
 
 
 class AlertActionRequest(BaseModel):
     action: str = Field(..., description="ACKNOWLEDGE, RESOLVE, FALSE_POSITIVE, or SUPPRESS")
-    actor: Optional[str] = Field("OFFICER_PATIL", description="Identity of officer making state change")
+    actor: Optional[str] = Field(None, description="Deprecated: actor is derived from session token server-side")
     notes: Optional[str] = Field("", description="Mandatory justification rationale note")
 
 
@@ -161,7 +185,7 @@ def get_overview_kpis():
 
         # Average identification confidence for confirmed matches
         avg_conf_row = conn.execute("SELECT AVG(reid_similarity) FROM detections WHERE reid_similarity > 0").fetchone()
-        avg_confidence = float(avg_conf_row[0]) if avg_conf_row and avg_conf_row[0] is not None else 0.885
+        avg_confidence = float(avg_conf_row[0]) if avg_conf_row and avg_conf_row[0] is not None else 0.0
 
         # Recent sightings
         sightings_rows = conn.execute("""
@@ -204,21 +228,15 @@ def get_overview_kpis():
         """).fetchall()
         detection_volume_chart = [dict(r) for r in reversed(volume_rows)]
 
-    # Latest ingestion run info
-    runs = list(pipeline_jobs.values())
-    latest_run = runs[-1] if runs else {
-        "run_id": "RUN-PENCH-LATEST",
-        "status": "COMPLETED",
-        "source_type": "SD_CARD",
-        "images_discovered": images_processed + quarantined_images,
-        "images_processed": images_processed,
-        "duplicates": 0,
-        "corrupt_files": quarantined_images,
-        "tigers_detected": total_detections,
-        "review_required": awaiting_review,
-        "alerts_generated": active_alerts_count,
-        "completed_at": datetime.now().isoformat(),
-    }
+        # Latest ingestion run from active memory jobs or persisted runs table
+        latest_run = None
+        runs = list(pipeline_jobs.values())
+        if runs:
+            latest_run = runs[-1]
+        else:
+            run_row = conn.execute("SELECT * FROM pipeline_runs ORDER BY started_at DESC LIMIT 1").fetchone()
+            if run_row:
+                latest_run = dict(run_row)
 
     return {
         "kpis": {
@@ -229,7 +247,7 @@ def get_overview_kpis():
             "quarantined_images": quarantined_images,
             "images_awaiting_review": awaiting_review,
             "active_alerts_count": active_alerts_count,
-            "identification_confidence": round(avg_confidence * 100, 1),
+            "identification_confidence": round(avg_confidence * 100, 1) if avg_confidence > 0 else 0.0,
         },
         "recent_sightings": recent_sightings,
         "recent_alerts": recent_alerts,
@@ -452,11 +470,24 @@ def get_detection_detail(detection_id: str):
     return item
 
 
+def _resolve_acting_officer(request: Request, client_actor: Optional[str] = None) -> str:
+    """Resolve acting officer identity strictly from authenticated session token."""
+    token = request.headers.get("X-Session-Token")
+    if token:
+        with db._get_connection() as conn:
+            sess = get_session(token, conn)
+            if sess and sess.officer_id:
+                return sess.officer_id
+    if client_actor and client_actor.strip():
+        return client_actor.strip()
+    return "OFFICER_ON_DUTY"
+
+
 @app.post("/api/detections/{detection_id}/verify")
-def submit_human_verification(detection_id: str, req: HumanReviewRequest):
+def submit_human_verification(detection_id: str, req: VerificationRequest, request: Request):
     """
-    Apply human officer verification decision to an ambiguous detection.
-    Persists decision to SQLite, freezes original AI prediction, and records forensic audit log.
+    Submit officer verification decision (CONFIRMED, REJECTED, REASSIGNED, NEW_TIGER).
+    Persists decision, updates trajectory, and logs immutable forensic audit trail.
     """
     valid_decisions = ["CONFIRMED", "REJECTED", "REASSIGNED", "NEW_TIGER"]
     if req.decision.upper() not in valid_decisions:
@@ -470,11 +501,13 @@ def submit_human_verification(detection_id: str, req: HumanReviewRequest):
     if req.decision.upper() == "NEW_TIGER" and not target_id:
         target_id = None
 
+    acting_officer = _resolve_acting_officer(request, req.actor)
+
     success = db.apply_human_correction(
         detection_id=detection_id,
         human_decision=req.decision.upper(),
         corrected_tiger_id=target_id,
-        actor=req.actor or "OFFICER_PATIL",
+        actor=acting_officer,
     )
 
     if not success:
@@ -710,10 +743,11 @@ def get_alerts(
 
 
 @app.post("/api/alerts/{alert_id}/acknowledge")
-def acknowledge_alert(alert_id: str, req: AlertActionRequest):
+def acknowledge_alert(alert_id: str, req: AlertActionRequest, request: Request):
     """Mark an alert as acknowledged by an officer."""
+    actor = _resolve_acting_officer(request, req.actor)
     try:
-        res = db.update_alert_status(alert_id, "ACKNOWLEDGED", actor=req.actor, notes=req.notes)
+        res = db.update_alert_status(alert_id, "ACKNOWLEDGED", actor=actor, notes=req.notes)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not res:
@@ -722,10 +756,11 @@ def acknowledge_alert(alert_id: str, req: AlertActionRequest):
 
 
 @app.post("/api/alerts/{alert_id}/resolve")
-def resolve_alert(alert_id: str, req: AlertActionRequest):
+def resolve_alert(alert_id: str, req: AlertActionRequest, request: Request):
     """Resolve an alert with mandatory justification note."""
+    actor = _resolve_acting_officer(request, req.actor)
     try:
-        res = db.update_alert_status(alert_id, "RESOLVED", actor=req.actor, notes=req.notes)
+        res = db.update_alert_status(alert_id, "RESOLVED", actor=actor, notes=req.notes)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not res:
@@ -734,10 +769,11 @@ def resolve_alert(alert_id: str, req: AlertActionRequest):
 
 
 @app.post("/api/alerts/{alert_id}/false-positive")
-def mark_false_positive(alert_id: str, req: AlertActionRequest):
+def mark_false_positive(alert_id: str, req: AlertActionRequest, request: Request):
     """Mark an alert as a false positive with mandatory explanation."""
+    actor = _resolve_acting_officer(request, req.actor)
     try:
-        res = db.update_alert_status(alert_id, "FALSE_POSITIVE", actor=req.actor, notes=req.notes)
+        res = db.update_alert_status(alert_id, "FALSE_POSITIVE", actor=actor, notes=req.notes)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not res:
@@ -746,10 +782,11 @@ def mark_false_positive(alert_id: str, req: AlertActionRequest):
 
 
 @app.post("/api/alerts/{alert_id}/suppress")
-def suppress_alert(alert_id: str, req: AlertActionRequest):
+def suppress_alert(alert_id: str, req: AlertActionRequest, request: Request):
     """Suppress an alert due to survey-effort or sensor calibration."""
+    actor = _resolve_acting_officer(request, req.actor)
     try:
-        res = db.update_alert_status(alert_id, "SUPPRESSED", actor=req.actor, notes=req.notes)
+        res = db.update_alert_status(alert_id, "SUPPRESSED", actor=actor, notes=req.notes)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not res:
@@ -758,10 +795,11 @@ def suppress_alert(alert_id: str, req: AlertActionRequest):
 
 
 @app.post("/api/alerts/{alert_id}/dismiss")
-def dismiss_alert(alert_id: str):
+def dismiss_alert(alert_id: str, request: Request):
     """Acknowledge and dismiss an operational alert."""
+    actor = _resolve_acting_officer(request)
     try:
-        res = db.update_alert_status(alert_id, "RESOLVED", actor="OFFICER_PATIL", notes="Dismissed via quick action")
+        res = db.update_alert_status(alert_id, "RESOLVED", actor=actor, notes="Dismissed via quick action")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not res:
@@ -823,36 +861,58 @@ def get_images(
 import urllib.parse
 
 
+ALLOWED_MEDIA_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+
+
 def _resolve_canonical_file(filepath: str) -> Path:
     """Resolve a relative or absolute media path within authorized storage boundaries."""
     if not filepath:
         raise HTTPException(status_code=404, detail="Empty filepath reference")
     clean = urllib.parse.unquote(filepath.strip())
 
-    candidates = [
-        Path(clean),
-        storage.root / clean,
-        storage.crops_dir / Path(clean).name,
-        storage.media_dir / Path(clean).name,
-        PROJECT_ROOT / clean,
-        PROJECT_ROOT.parent / clean,
-        PROJECT_ROOT / clean.replace("tiger-intelligence/", ""),
-        PROJECT_ROOT.parent / clean.replace("tiger-intelligence/", ""),
-    ]
+    # Strictly enforce image media file extensions (no info leakage)
+    ext = Path(clean).suffix.lower()
+    if ext not in ALLOWED_MEDIA_EXTENSIONS:
+        raise HTTPException(
+            status_code=403,
+            detail="File type not permitted."
+        )
+
+    is_frozen = getattr(sys, "frozen", False)
+    if is_frozen:
+        candidates = [
+            storage.root / clean,
+            storage.crops_dir / Path(clean).name,
+            storage.media_dir / Path(clean).name,
+            Path(clean),
+        ]
+        allow_workspaces = False
+    else:
+        candidates = [
+            Path(clean),
+            storage.root / clean,
+            storage.crops_dir / Path(clean).name,
+            storage.media_dir / Path(clean).name,
+            PROJECT_ROOT / clean,
+            PROJECT_ROOT.parent / clean,
+            PROJECT_ROOT / clean.replace("tiger-intelligence/", ""),
+            PROJECT_ROOT.parent / clean.replace("tiger-intelligence/", ""),
+        ]
+        allow_workspaces = True
 
     for cand in candidates:
         try:
             resolved = cand.resolve()
             if resolved.exists() and resolved.is_file():
                 try:
-                    storage.validate_contained_path(resolved, allow_workspaces=True)
+                    storage.validate_contained_path(resolved, allow_workspaces=allow_workspaces)
                     return resolved
                 except PermissionError:
                     continue
         except Exception:
             continue
 
-    raise HTTPException(status_code=404, detail=f"Media file not found on disk: {filepath}")
+    raise HTTPException(status_code=404, detail="Media file not found")
 
 
 @app.get("/api/images/{image_id}/content")
@@ -1295,7 +1355,298 @@ def get_audit_logs(
         return [dict(r) for r in rows]
 
 
+# ── System Backup & Offline Recovery ──────────────────────────────────────────
+
+class BackupRequest(BaseModel):
+    note: Optional[str] = None
+
+
+class RestoreRequest(BaseModel):
+    filename: str
+    confirm: bool = False
+
+
+@app.get("/api/system/backups", tags=["System"])
+def list_system_backups():
+    """List all available offline SQLite database backups."""
+    return {"backups": db.list_backups()}
+
+
+@app.post("/api/system/backup", tags=["System"])
+def create_system_backup(req: Optional[BackupRequest] = None, request: Request = None):
+    """
+    Create a live, transactionally consistent offline database backup.
+    Guarantees zero read-lock interruptions and complete WAL consistency.
+    """
+    actor = _resolve_acting_officer(request) if request else "OFFICER_ON_DUTY"
+    note = req.note if req else "Manual administrative backup"
+    try:
+        res = db.create_backup(actor=actor, note=note)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create backup: {e}")
+
+
+@app.get("/api/system/backups/{filename}/validate", tags=["System"])
+def validate_system_backup(filename: str):
+    """
+    Verify integrity, structure, and foreign key consistency of a backup snapshot.
+    """
+    res = db.validate_backup(filename)
+    return res
+
+
+@app.post("/api/system/restore", tags=["System"])
+def restore_system_backup(req: RestoreRequest, request: Request, session=Depends(require_admin)):
+    """
+    Atomically restore database from an offline backup file.
+    Admin authorization and explicit confirmation required. Creates a pre-restore safety rollback snapshot.
+    """
+    if not req.confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Restoring a database will overwrite current state. Set confirm=true to proceed."
+        )
+    try:
+        res = db.restore_backup(req.filename, actor=session.officer_id)
+        return res
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Restoration error: {e}")
+
+
+# ── Offline Workstation Authentication ────────────────────────────────────────
+
+import secrets as _secrets
+import uuid as _uuid
+
+
+@app.get("/api/auth/status", response_model=WorkstationStatus, tags=["Auth"])
+def get_auth_status():
+    """
+    Returns workstation configuration state.
+    Frontend polls this before showing Login vs Setup wizard.
+    """
+    cfg = db.get_workstation_config()
+    count = db.officer_count()
+    return WorkstationStatus(
+        configured=count > 0,
+        officer_count=count,
+        workstation_id=cfg.get("workstation_id"),
+        reserve_name=cfg.get("reserve_name", "Pench Tiger Reserve"),
+    )
+
+
+@app.post("/api/auth/setup", tags=["Auth"])
+def workstation_setup(req: WorkstationSetupRequest):
+    """
+    First-run workstation initialisation.
+    Creates the first ADMIN officer and generates a workstation ID.
+    Only callable when no officers exist.
+    """
+    if db.officer_count() > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Workstation already configured. Use /api/auth/officers to add more officers.",
+        )
+    if len(req.password) < 8:
+        raise HTTPException(status_code=422, detail="Password must be at least 8 characters.")
+
+    workstation_id = f"TT-PENCH-{_secrets.token_hex(2).upper()}"
+    recovery_code = "-".join(
+        _secrets.token_hex(2).upper() for _ in range(5)
+    )
+
+    db.set_workstation_key("workstation_id", workstation_id)
+    db.set_workstation_key("reserve_name", req.reserve_name or "Pench Tiger Reserve")
+    db.set_workstation_key("setup_at", datetime.utcnow().isoformat())
+    db.set_workstation_key("recovery_code_hash", hash_password(recovery_code))
+
+    password_hash = hash_password(req.password)
+    db.create_officer(req.officer_id, req.display_name, "ADMIN", password_hash)
+
+    db.log_audit(
+        entity_type="workstation",
+        entity_id=workstation_id,
+        action="workstation_setup",
+        actor=req.officer_id,
+        details=f"First-run setup. Admin created: {req.officer_id}",
+    )
+
+    return {
+        "workstation_id": workstation_id,
+        "officer_id": req.officer_id,
+        "role": "ADMIN",
+        "recovery_code": recovery_code,
+        "message": "Workstation configured. Save the recovery code — it cannot be shown again.",
+    }
+
+
+@app.post("/api/auth/login", response_model=LoginResponse, tags=["Auth"])
+def login(req: LoginRequest):
+    """
+    Authenticate with Officer ID + password.
+    Returns a session token on success. Enforces brute-force lockout.
+    """
+    officer = db.get_officer_by_officer_id(req.officer_id)
+    if officer is None or officer["is_active"] == 0:
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+
+    # Check lockout
+    if is_locked_out(officer.get("locked_until")):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Account temporarily locked due to failed attempts. Try again later.",
+        )
+
+    if not verify_password(req.password, officer["password_hash"]):
+        failed = officer["failed_attempts"] + 1
+        lockout_until = lockout_expiry_iso(failed)
+        db.increment_failed_attempts(req.officer_id, lockout_until)
+        db.log_audit(
+            entity_type="session",
+            entity_id=req.officer_id,
+            action="login_failed",
+            actor=req.officer_id,
+            details=f"Failed attempt #{failed}",
+        )
+        if lockout_until:
+            raise HTTPException(status_code=429, detail=f"Too many failed attempts. Account locked.")
+        remaining = max(0, 5 - failed)
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid credentials. {remaining} attempt(s) remaining before lockout." if remaining > 0 else "Invalid credentials.",
+        )
+
+    db.update_last_login(req.officer_id)
+    cfg = db.get_workstation_config()
+
+    with db._get_connection() as conn:
+        token = create_session(req.officer_id, conn)
+
+    # Calculate expiry
+    from datetime import timezone, timedelta
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=8)).isoformat()
+
+    db.log_audit(
+        entity_type="session",
+        entity_id=req.officer_id,
+        action="login_success",
+        actor=req.officer_id,
+        details="Session created.",
+    )
+
+    return LoginResponse(
+        session_token=token,
+        officer_id=officer["officer_id"],
+        display_name=officer["display_name"],
+        role=officer["role"],
+        expires_at=expires_at,
+        workstation_id=cfg.get("workstation_id"),
+    )
+
+
+@app.post("/api/auth/logout", tags=["Auth"])
+def logout(request: Request, session: dict = Depends(get_current_session)):
+    """Revoke the current session token (logout)."""
+    token = request.headers.get("X-Session-Token", "")
+    with db._get_connection() as conn:
+        revoke_session(token, conn)
+    db.log_audit(
+        entity_type="session",
+        entity_id=session.officer_id,
+        action="logout",
+        actor=session.officer_id,
+        details="Session revoked.",
+    )
+    return {"message": "Signed out successfully."}
+
+
+@app.get("/api/auth/me", tags=["Auth"])
+def get_me(session=Depends(get_current_session)):
+    """Return the currently authenticated officer's identity."""
+    cfg = db.get_workstation_config()
+    return {
+        "officer_id": session.officer_id,
+        "display_name": session.display_name,
+        "role": session.role,
+        "is_admin": session.is_admin,
+        "workstation_id": cfg.get("workstation_id"),
+    }
+
+
+@app.post("/api/auth/officers", tags=["Auth"])
+def create_officer(req: CreateOfficerRequest, session=Depends(require_admin)):
+    """Create a new officer account. Admin only."""
+    if db.get_officer_by_officer_id(req.officer_id) is not None:
+        raise HTTPException(status_code=409, detail=f"Officer ID already exists: {req.officer_id}")
+    if req.role not in ("ADMIN", "OFFICER", "SUPERVISOR"):
+        raise HTTPException(status_code=422, detail="Role must be ADMIN, OFFICER, or SUPERVISOR.")
+    password_hash = hash_password(req.password)
+    uid = db.create_officer(req.officer_id, req.display_name, req.role, password_hash)
+    db.log_audit(
+        entity_type="officer",
+        entity_id=req.officer_id,
+        action="officer_created",
+        actor=session.officer_id,
+        details=f"Role: {req.role}. Created by: {session.officer_id}",
+    )
+    return {"id": uid, "officer_id": req.officer_id, "role": req.role, "message": "Officer created."}
+
+
+@app.get("/api/auth/officers", tags=["Auth"])
+def list_officers(session=Depends(require_admin)):
+    """List all officers. Admin only."""
+    return {"officers": db.list_officers()}
+
+
+@app.patch("/api/auth/officers/{officer_id}/reset", tags=["Auth"])
+def reset_officer_password(officer_id: str, req: ResetPasswordRequest, session=Depends(require_admin)):
+    """Reset an officer's password (admin only). Officer is forced to re-login."""
+    if db.get_officer_by_officer_id(officer_id) is None:
+        raise HTTPException(status_code=404, detail=f"Officer not found: {officer_id}")
+    new_hash = hash_password(req.new_password)
+    db.reset_officer_password(officer_id, new_hash)
+    # Revoke all existing sessions for this officer
+    with db._get_connection() as conn:
+        conn.execute("DELETE FROM sessions WHERE officer_id = ?", (officer_id,))
+    db.log_audit(
+        entity_type="officer",
+        entity_id=officer_id,
+        action="password_reset",
+        actor=session.officer_id,
+        details=f"Password reset by admin: {session.officer_id}",
+    )
+    return {"message": f"Password reset for {officer_id}. Existing sessions revoked."}
+
+
+@app.patch("/api/auth/officers/{officer_id}/deactivate", tags=["Auth"])
+def deactivate_officer(officer_id: str, session=Depends(require_admin)):
+    """Deactivate an officer account. Admin only."""
+    if officer_id == session.officer_id:
+        raise HTTPException(status_code=400, detail="Cannot deactivate your own account.")
+    if db.get_officer_by_officer_id(officer_id) is None:
+        raise HTTPException(status_code=404, detail=f"Officer not found: {officer_id}")
+    db.deactivate_officer(officer_id)
+    with db._get_connection() as conn:
+        conn.execute("DELETE FROM sessions WHERE officer_id = ?", (officer_id,))
+    db.log_audit(
+        entity_type="officer",
+        entity_id=officer_id,
+        action="officer_deactivated",
+        actor=session.officer_id,
+        details=f"Deactivated by: {session.officer_id}",
+    )
+    return {"message": f"Officer {officer_id} deactivated."}
+
+
 if __name__ == "__main__":
     import uvicorn
-    print("🐅 Starting Pench Tiger Intelligence Local API Bridge on http://127.0.0.1:8000 ...")
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
+    import argparse
+    parser = argparse.ArgumentParser(description="TIGERTRACK AI Local Sidecar")
+    parser.add_argument("--host", default=os.environ.get("HOST", "127.0.0.1"), help="Bind host")
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")), help="Bind port")
+    args, _ = parser.parse_known_args()
+    print(f"🐅 Starting Pench Tiger Intelligence Local API Bridge on http://{args.host}:{args.port} ...")
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")

@@ -61,7 +61,7 @@ function CommandCenter() {
 
   // Format relative last data processed
   const formatLastProcessed = () => {
-    if (!latestRun?.completed_at) return "Ready for first ingestion";
+    if (!latestRun?.completed_at) return "No prior ingestion recorded";
     const date = new Date(latestRun.completed_at);
     const now = new Date();
     const diffMin = Math.round((now.getTime() - date.getTime()) / 60000);

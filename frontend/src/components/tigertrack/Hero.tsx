@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, LogIn, UserPlus, Radio, Zap, Eye, Shield } from "lucide-react";
 import tiger from "@/assets/tiger-hero.png";
 import forest from "@/assets/forest-night.jpg";
 
@@ -10,6 +10,13 @@ const dataCards = [
   { label: "Re-ID Match", value: "95.1% Sim", pos: "right-[5%] top-[20%]" },
   { label: "Field Sighting", value: "08:30 AM", pos: "right-[8%] bottom-[26%]" },
   { label: "Station STN02", value: "Pench Core", pos: "left-[7%] bottom-[20%]" },
+];
+
+const floatingIcons = [
+  { Icon: Radio, pos: "left-[2%] top-[48%]", delay: 1.0, color: "text-signal" },
+  { Icon: Eye, pos: "right-[2%] top-[50%]", delay: 1.3, color: "text-primary" },
+  { Icon: Zap, pos: "left-[18%] top-[8%]", delay: 1.6, color: "text-amber-400" },
+  { Icon: Shield, pos: "right-[18%] bottom-[8%]", delay: 1.9, color: "text-primary/70" },
 ];
 
 function useMouseParallax(reduced: boolean) {
@@ -98,11 +105,6 @@ export function Hero() {
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
           className="max-w-2xl"
         >
-          <span className="eyebrow inline-flex items-center gap-2 rounded-sm border border-border px-3 py-1.5">
-            <span className="size-1.5 rounded-full bg-signal" />
-            Autonomous Camera-Trap Intelligence · 100% Offline
-          </span>
-
           <h1 className="mt-7 text-[clamp(2.4rem,6.5vw,4.6rem)] leading-[0.95] font-semibold text-balance">
             From Camera Traps to <span className="text-amber-gradient">Wildlife Intelligence.</span>
           </h1>
@@ -117,19 +119,20 @@ export function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              to="/dashboard"
+              to="/login"
               className="group inline-flex items-center gap-2 rounded-sm btn-amber px-6 py-3.5 text-sm font-semibold shadow-[var(--shadow-glow)] transition-transform hover:-translate-y-0.5"
             >
-              Launch Operational Dashboard
+              <LogIn className="size-4" />
+              Sign In
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center gap-2 rounded-sm border border-border px-6 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            <Link
+              to="/setup"
+              className="group inline-flex items-center gap-2 rounded-sm border border-primary/50 bg-primary/10 px-6 py-3.5 text-sm font-semibold text-primary transition-all hover:-translate-y-0.5 hover:bg-primary/20"
             >
-              <Play className="size-4 text-primary" />
-              See How It Works
-            </a>
+              <UserPlus className="size-4" />
+              Sign Up
+            </Link>
           </div>
 
           <div className="mt-12 border-t border-border pt-6">
@@ -205,6 +208,20 @@ export function Hero() {
               <span className="data-chip block text-muted-foreground">{c.label}</span>
               <span className="font-mono text-sm text-primary">{c.value}</span>
             </motion.div>
+          ))}
+
+          {/* floating icons */}
+          {!reduced && floatingIcons.map(({ Icon, pos, delay, color }, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay, duration: 0.6, type: "spring", stiffness: 180 }}
+              className={`absolute ${pos} grid size-9 place-items-center rounded-full border border-border bg-card/70 backdrop-blur-sm animate-drift shadow-sm`}
+              style={{ animationDelay: `${delay}s`, ...shift(28 + i * 8) }}
+            >
+              <Icon className={`size-4 ${color}`} />
+            </motion.span>
           ))}
         </motion.div>
       </div>
