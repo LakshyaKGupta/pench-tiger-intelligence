@@ -175,13 +175,19 @@ function TigerCatalogPage() {
                     <div className="flex items-center justify-between">
                       <span>Last seen:</span>
                       <span className="font-medium text-foreground">
-                        Station {t.primary_flank ? `STN (${t.primary_flank} flank)` : "Field"}
+                        {t.last_seen ? new Date(t.last_seen).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "Recent"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>Last detected:</span>
+                      <span>Total sightings:</span>
+                      <span className="font-semibold text-primary">
+                        {t.total_sightings || 1} field captures
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Territory area:</span>
                       <span className="font-medium text-foreground">
-                        {t.last_seen ? new Date(t.last_seen).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "Recent"}
+                        {t.home_range_area_km2 > 0 ? `${t.home_range_area_km2} km²` : "Core Range"}
                       </span>
                     </div>
                   </div>

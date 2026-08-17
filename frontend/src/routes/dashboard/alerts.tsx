@@ -250,29 +250,60 @@ function AlertCenterPage() {
 
                 {/* Expandable "Why this alert was raised" */}
                 {isExpanded && (
-                  <div className="rounded-md bg-secondary/30 p-4 border border-border/40 space-y-2 text-xs">
-                    <h4 className="font-semibold text-foreground text-xs uppercase tracking-wider text-muted-foreground">
-                      Anomaly Evidence Details
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-                      {evidence.shift_km !== undefined && (
-                        <div>
-                          <span className="text-muted-foreground text-[11px] block">Displacement:</span>
-                          <span className="font-semibold text-foreground font-mono">{evidence.shift_km} km</span>
-                        </div>
-                      )}
-                      {evidence.station || alert.station_id ? (
-                        <div>
-                          <span className="text-muted-foreground text-[11px] block">Station ID:</span>
-                          <span className="font-semibold text-foreground font-mono">{evidence.station || alert.station_id}</span>
-                        </div>
-                      ) : null}
-                      {evidence.reid_similarity !== undefined && (
-                        <div>
-                          <span className="text-muted-foreground text-[11px] block">Match Similarity:</span>
-                          <span className="font-semibold text-signal font-mono">{(evidence.reid_similarity * 100).toFixed(1)}%</span>
-                        </div>
-                      )}
+                  <div className="rounded-md bg-secondary/40 p-4 border border-border/50 space-y-3.5 text-xs">
+                    <div>
+                      <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">
+                        1. What Happened
+                      </span>
+                      <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                        {alert.explanation || "An ecological movement or boundary anomaly was detected during autonomous camera data processing."}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">
+                        2. Why It Matters
+                      </span>
+                      <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                        {alert.severity === "CRITICAL"
+                          ? "Movement near human habitation creates potential conflict risk or indicates territorial displacement."
+                          : "Changes in regular movement patterns help track dispersal, health, and territory stability across Pench."}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">
+                        3. Field Evidence
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1.5">
+                        {evidence.shift_km !== undefined && (
+                          <div className="rounded bg-black/20 p-2 border border-border/30">
+                            <span className="text-muted-foreground text-[10px] block">Distance From Normal Range:</span>
+                            <span className="font-semibold text-foreground font-mono">{evidence.shift_km} km</span>
+                          </div>
+                        )}
+                        {evidence.station || alert.station_id ? (
+                          <div className="rounded bg-black/20 p-2 border border-border/30">
+                            <span className="text-muted-foreground text-[10px] block">Camera Station:</span>
+                            <span className="font-semibold text-foreground font-mono">{evidence.station || alert.station_id}</span>
+                          </div>
+                        ) : null}
+                        {evidence.reid_similarity !== undefined && (
+                          <div className="rounded bg-black/20 p-2 border border-border/30">
+                            <span className="text-muted-foreground text-[10px] block">Identification Confidence:</span>
+                            <span className="font-semibold text-signal font-mono">{(evidence.reid_similarity * 100).toFixed(1)}%</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">
+                        4. What You Can Do
+                      </span>
+                      <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                        Verify patrol records for station {evidence.station || alert.station_id || "the reported area"}, notify range field staff if near boundary, and acknowledge or resolve this alert.
+                      </p>
                     </div>
                   </div>
                 )}

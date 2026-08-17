@@ -121,24 +121,23 @@ function CommandCenter() {
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2 text-primary font-semibold text-sm">
                 <Sparkles className="size-4" />
-                <span>Welcome to TIGERTRACK AI</span>
+                <span>Start with today's camera data</span>
               </div>
               <h2 className="font-display text-lg font-bold text-foreground">
-                Autonomous Wildlife Intelligence for Field Operations
+                Process Camera Traps Offline
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Start by importing camera-trap images from an SD card or local folder. TIGERTRACK AI
-                will filter blanks, identify individual tigers by their stripe patterns, and detect
-                ecological movements 100% locally with zero internet required.
+                Insert an SD card or choose a camera-data folder. TIGERTRACK filters blanks,
+                identifies individual tigers by their stripe patterns, and maps movements with zero internet required.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <Link
                 to="/dashboard/ingest"
-                className="flex items-center gap-2 rounded-md btn-amber px-4 py-2.5 text-xs font-semibold shadow-sm"
+                className="flex items-center gap-2 rounded-md btn-amber px-5 py-2.5 text-xs font-semibold shadow-sm"
               >
                 <HardDriveDownload className="size-4" />
-                Ingest Camera Data
+                Start Ingestion
               </Link>
               <Link
                 to="/dashboard/tigers"
@@ -426,10 +425,10 @@ function CommandCenter() {
                     <Compass className="size-5" />
                   </div>
                   <p className="text-xs font-semibold text-foreground">
-                    Pench Core & Buffer GIS
+                    Pench Reserve Territory Map
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {kpis.active_camera_stations} camera stations · Home ranges mapped
+                    {kpis.active_camera_stations} camera stations · Active tiger ranges
                   </p>
                 </div>
               </div>
@@ -439,7 +438,7 @@ function CommandCenter() {
                 className="w-full flex items-center justify-center gap-2 rounded-md btn-amber py-2 text-xs font-semibold shadow-xs"
               >
                 <Eye className="size-3.5" />
-                <span>Launch Interactive Wildlife GIS</span>
+                <span>Open Reserve Map</span>
               </Link>
             </div>
           </div>

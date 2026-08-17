@@ -215,24 +215,24 @@ function CameraIngestionPage() {
         <div className="calm-card rounded-lg p-6 space-y-6">
           <div className="space-y-1">
             <h2 className="font-display text-base font-bold text-foreground">
-              Step 1: Select Camera Trap Media Source
+              01 Source: Choose Camera Data
             </h2>
             <p className="text-xs text-muted-foreground">
-              Enter the local SD card path or choose a detected removable drive
+              Select an SD card or camera folder from the field to begin processing
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1.5">
-                SD Card / Media Folder Path:
+                Folder or SD Card Path:
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={sourcePath}
                   onChange={(e) => setSourcePath(e.target.value)}
-                  placeholder="/Volumes/SD_CARD/DCIM or data/test_messy_sdcard"
+                  placeholder="e.g. /Volumes/SD_CARD/DCIM or data/test_messy_sdcard"
                   className="flex-1 h-10 rounded-md border border-border/70 bg-secondary/30 px-3 text-xs font-mono text-foreground focus:border-primary focus:outline-none"
                 />
                 <button
@@ -246,7 +246,7 @@ function CameraIngestionPage() {
                   ) : (
                     <Search className="size-3.5" />
                   )}
-                  <span>Scan Source</span>
+                  <span>Scan Folder</span>
                 </button>
               </div>
             </div>
@@ -277,35 +277,35 @@ function CameraIngestionPage() {
         </div>
       )}
 
-      {/* Step 2: PRE-SCAN SUMMARY */}
+      {/* Step 2: SCAN SUMMARY */}
       {currentStep === 2 && prescanReport && (
         <div className="calm-card rounded-lg p-6 space-y-6">
           <div className="space-y-1">
             <h2 className="font-display text-base font-bold text-foreground">
-              Step 2: Pre-Scan Summary
+              02 Scan: Review Discovered Files
             </h2>
             <p className="text-xs text-muted-foreground">
-              Integrity verification completed for {prescanReport.source_path}
+              {prescanReport.total_discovered} files discovered in {prescanReport.source_path}
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="rounded-md bg-secondary/30 border border-border/40 p-4 space-y-1">
-              <span className="text-xs text-muted-foreground">Total Files</span>
+              <span className="text-xs text-muted-foreground">Total Discovered</span>
               <p className="font-display text-lg font-bold text-foreground">
-                {prescanReport.total_files_discovered}
+                {prescanReport.total_discovered}
               </p>
             </div>
             <div className="rounded-md bg-signal/10 border border-signal/30 p-4 space-y-1">
-              <span className="text-xs text-signal">Actionable Media</span>
+              <span className="text-xs text-signal font-semibold">Usable Images</span>
               <p className="font-display text-lg font-bold text-signal">
                 {prescanReport.new_actionable_images}
               </p>
             </div>
             <div className="rounded-md bg-amber/10 border border-amber/30 p-4 space-y-1">
-              <span className="text-xs text-amber">Corrupt / Duplicates</span>
+              <span className="text-xs text-amber font-semibold">Corrupt / Duplicates</span>
               <p className="font-display text-lg font-bold text-amber">
-                {prescanReport.corrupted_files + prescanReport.duplicate_images}
+                {(prescanReport.corrupt_images || 0) + (prescanReport.duplicate_images || 0)}
               </p>
             </div>
           </div>
@@ -316,7 +316,7 @@ function CameraIngestionPage() {
               onClick={() => setCurrentStep(1)}
               className="rounded-md border border-border/60 px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              Back to Source
+              Choose Another Folder
             </button>
             <button
               type="button"
@@ -324,7 +324,7 @@ function CameraIngestionPage() {
               className="rounded-md btn-amber px-6 py-2 text-xs font-semibold shadow-xs flex items-center gap-2"
             >
               <Play className="size-3.5" />
-              <span>Start Autonomous Processing</span>
+              <span>Process Images</span>
             </button>
           </div>
         </div>
@@ -338,10 +338,10 @@ function CameraIngestionPage() {
               <Loader2 className="size-6 animate-spin" />
             </div>
             <h2 className="font-display text-lg font-bold text-foreground">
-              Processing Camera Trap Data...
+              03 Process: Analyzing Camera Data...
             </h2>
             <p className="text-xs text-muted-foreground">
-              {stageMessage || "Running multi-stage AI triage and MegaDescriptor Re-ID..."}
+              {stageMessage || "Detection → Identification → Movement Analysis"}
             </p>
           </div>
 
@@ -354,7 +354,7 @@ function CameraIngestionPage() {
               />
             </div>
             <div className="flex justify-between text-xs font-mono text-muted-foreground">
-              <span>Stage: {activeStage}</span>
+              <span>{activeStage}</span>
               <span>{stageProgress}%</span>
             </div>
           </div>
@@ -366,7 +366,7 @@ function CameraIngestionPage() {
               onClick={() => setTechDetailsOpen(!techDetailsOpen)}
               className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 mx-auto"
             >
-              <span>{techDetailsOpen ? "Hide technical stages" : "View processing details"}</span>
+              <span>{techDetailsOpen ? "Hide technical stages" : "View technical stages"}</span>
               <ChevronDown className={`size-3 transition-transform ${techDetailsOpen ? "rotate-180" : ""}`} />
             </button>
 
@@ -375,10 +375,10 @@ function CameraIngestionPage() {
                 <div>✓ 1/7 Ingestion & Sequence Parsing</div>
                 <div>✓ 2/7 Multi-Layer File Integrity Check</div>
                 <div>✓ 3/7 Privacy Safeguards (Human Face Masking)</div>
-                <div>⟳ 4/7 Species Classification (Tiger vs Non-Target)</div>
-                <div>⟳ 5/7 MegaDescriptor Flank Stripe Re-ID</div>
-                <div>⟳ 6/7 Home Range & Village Proximity Alerts</div>
-                <div>⟳ 7/7 Deliverables & Audit Log Generation</div>
+                <div>✓ 4/7 Species Classification (Tiger vs Non-Target)</div>
+                <div>✓ 5/7 Stripe Pattern Identification</div>
+                <div>✓ 6/7 Home Range & Village Proximity Alerts</div>
+                <div>✓ 7/7 Deliverables & Audit Log Generation</div>
               </div>
             )}
           </div>
@@ -394,10 +394,10 @@ function CameraIngestionPage() {
             </div>
             <div>
               <h2 className="font-display text-base font-bold text-foreground">
-                Ingestion & Analysis Complete
+                04 Results: Processing Complete
               </h2>
               <p className="text-xs text-muted-foreground">
-                All media files processed, cataloged, and committed to local database
+                All media files analyzed and committed to local database
               </p>
             </div>
           </div>
@@ -416,7 +416,7 @@ function CameraIngestionPage() {
               </p>
             </div>
             <div className="rounded-md bg-secondary/30 border border-border/40 p-3 space-y-0.5">
-              <span className="text-[11px] text-muted-foreground">Quarantined</span>
+              <span className="text-[11px] text-muted-foreground">Quarantined (Blank/Corrupt)</span>
               <p className="font-display text-base font-bold text-amber">
                 {currentJob?.quarantined_images || 3}
               </p>
@@ -451,7 +451,7 @@ function CameraIngestionPage() {
                 to="/dashboard/tigers"
                 className="rounded-md btn-amber px-5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5"
               >
-                <span>View Tiger Catalog</span>
+                <span>View Tigers</span>
                 <ArrowRight className="size-3.5" />
               </Link>
             </div>

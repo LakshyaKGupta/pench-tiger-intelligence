@@ -103,21 +103,19 @@ export function Hero() {
             Autonomous Camera-Trap Intelligence · 100% Offline
           </span>
 
-          <h1 className="mt-7 text-[clamp(2.6rem,7vw,5rem)] leading-[0.95] font-semibold text-balance">
-            Every Stripe <span className="text-amber-gradient">Tells a Story.</span>
+          <h1 className="mt-7 text-[clamp(2.4rem,6.5vw,4.6rem)] leading-[0.95] font-semibold text-balance">
+            From Camera Traps to <span className="text-amber-gradient">Wildlife Intelligence.</span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg text-foreground/80">
-            Field teams in Pench collect more images than anyone can look through. We read
-            the stripes, so the forest staff can read the story.
+          <p className="mt-5 max-w-xl text-lg text-foreground/90 font-medium">
+            Insert camera data &nbsp;→&nbsp; TIGERTRACK processes it offline &nbsp;→&nbsp; Review what matters.
           </p>
 
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Blank frames get set aside, each tiger gets recognised by its own stripe
-            pattern, and movement across the reserve is mapped week after week.
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            Blank frames are set aside automatically, each tiger is recognized by its unique stripe pattern, and reserve movements are mapped with zero cloud connectivity required.
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               to="/dashboard"
               className="group inline-flex items-center gap-2 rounded-sm btn-amber px-6 py-3.5 text-sm font-semibold shadow-[var(--shadow-glow)] transition-transform hover:-translate-y-0.5"

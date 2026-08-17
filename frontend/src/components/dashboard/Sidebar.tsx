@@ -57,23 +57,22 @@ export function Sidebar({
     { label: "Ingest", href: "/dashboard/ingest", icon: HardDriveDownload },
   ];
 
-  // Advanced & Technical Capabilities
+  // Secondary & Advanced Tools (Plain English for Field Staff)
   const advancedNavItems: NavItem[] = [
     {
-      label: "Human Review",
+      label: "Review Detections",
       href: "/dashboard/review",
       icon: CheckSquare,
       badge: reviewCount > 0 ? reviewCount : undefined,
       badgeColor: "bg-amber/20 text-amber border-amber/40",
     },
-    { label: "Detection Center", href: "/dashboard/detections", icon: Camera },
-    { label: "Image Review", href: "/dashboard/images", icon: ImageIcon },
     { label: "Camera Stations", href: "/dashboard/stations", icon: Radio },
-    { label: "Movement Track", href: "/dashboard/movement", icon: Footprints },
-    { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    { label: "Pipeline Health", href: "/dashboard/pipeline", icon: Cpu },
-    { label: "System Diagnostics", href: "/dashboard/system", icon: Activity },
-    { label: "Forensic Audit", href: "/dashboard/audit", icon: FileText },
+    { label: "All Detections", href: "/dashboard/detections", icon: Camera },
+    { label: "Image Library", href: "/dashboard/images", icon: ImageIcon },
+    { label: "Movement Records", href: "/dashboard/movement", icon: Footprints },
+    { label: "Processing History", href: "/dashboard/pipeline", icon: Cpu },
+    { label: "System Health", href: "/dashboard/system", icon: Activity },
+    { label: "Audit Log", href: "/dashboard/audit", icon: FileText },
   ];
 
   // Auto-expand Advanced if current path is inside an advanced route
@@ -173,12 +172,12 @@ export function Sidebar({
                 onClick={() => setAdvancedOpen(!advancedOpen)}
                 className="flex w-full items-center justify-between px-2 py-1.5 text-[11px] font-semibold text-muted-foreground/80 hover:text-foreground transition-colors"
               >
-                <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+                <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-semibold text-muted-foreground/80">
                   <SlidersHorizontal className="size-3" />
-                  Advanced Tools
+                  Advanced
                 </span>
                 <ChevronDown
-                  className={`size-3 transition-transform duration-200 ${
+                  className={`size-3 text-muted-foreground/80 transition-transform duration-200 ${
                     advancedOpen ? "rotate-180" : ""
                   }`}
                 />
