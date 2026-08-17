@@ -6,9 +6,15 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-# Dynamically locate schema.sql relative to db.py
+import sys
+
+# Dynamically locate schema.sql relative to db.py or PyInstaller bundle
 _CURRENT_DIR = Path(__file__).resolve().parent
-_PROJECT_ROOT = _CURRENT_DIR.parent.parent
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    _PROJECT_ROOT = Path(sys._MEIPASS)
+else:
+    _PROJECT_ROOT = _CURRENT_DIR.parent.parent
+
 SCHEMA_PATH = _PROJECT_ROOT / "database" / "schema.sql"
 if not SCHEMA_PATH.exists():
     SCHEMA_PATH = _CURRENT_DIR / "schema.sql"
@@ -684,12 +690,12 @@ class TigerDatabase:
                 )
             )
 
-            # 2. If NEW_TIGER, register in tigers table if not exists
-            if human_decision == "NEW_TIGER" and final_tiger_id:
+            # 2. Register tiger in tigers table if not exists
+            if final_tiger_id:
                 conn.execute(
                     """
                     INSERT INTO tigers (tiger_id, name, status, first_seen, last_seen, total_sightings)
-                    VALUES (?, ?, 'RESIDENT', ?, ?, 0)
+                    VALUES (?, ?, 'Resident', ?, ?, 0)
                     ON CONFLICT(tiger_id) DO NOTHING
                     """,
                     (final_tiger_id, final_tiger_id, det.get("timestamp", timestamp), det.get("timestamp", timestamp))

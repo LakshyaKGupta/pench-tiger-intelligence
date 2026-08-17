@@ -1,6 +1,6 @@
 use std::process::{Child, Command};
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State};
+use tauri::Manager;
 
 struct SidecarState {
     child: Mutex<Option<Child>>,
@@ -59,15 +59,36 @@ pub fn run() {
         ])
         .setup(|app| {
             println!("🐅 Initializing TIGERTRACK AI Native Desktop Shell...");
+            
+            // Check and spawn bundled Python sidecar if present
+            use tauri_plugin_shell::ShellExt;
+            match app.shell().sidecar("tiger-intelligence-sidecar") {
+                Ok(command) => {
+                    println!("🚀 Spawning local Python intelligence engine sidecar...");
+                    match command.spawn() {
+                        Ok((_rx, child)) => {
+                            println!("✓ Sidecar process successfully spawned (PID: {})", child.pid());
+                        }
+                        Err(e) => {
+                            println!("⚠️ Sidecar spawn notice (running standalone or dev bridge): {}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("ℹ️ Sidecar command not packaged (development mode active): {}", e);
+                }
+            }
+
             Ok(())
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Destroyed = event {
-                let state: State<SidecarState> = window.state();
-                if let Ok(mut child_lock) = state.child.lock() {
-                    if let Some(mut child) = child_lock.take() {
-                        println!("🛑 Terminating local Python intelligence bridge sidecar...");
-                        let _ = child.kill();
+                if let Some(state) = window.try_state::<SidecarState>() {
+                    if let Ok(mut child_lock) = state.child.lock() {
+                        if let Some(mut child) = child_lock.take() {
+                            println!("🛑 Terminating local Python intelligence bridge sidecar...");
+                            let _ = child.kill();
+                        }
                     }
                 }
             }

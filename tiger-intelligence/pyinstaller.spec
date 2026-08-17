@@ -11,13 +11,14 @@ PROJECT_DIR = Path(os.path.abspath(os.getcwd()))
 if PROJECT_DIR.name != "tiger-intelligence":
     PROJECT_DIR = PROJECT_DIR / "tiger-intelligence"
 
-added_files = [
+raw_added_files = [
     (str(PROJECT_DIR / "database" / "schema.sql"), "database"),
     (str(PROJECT_DIR / "models"), "models"),
     (str(PROJECT_DIR / "data" / "pench_reserve_core_boundary.geojson"), "data"),
     (str(PROJECT_DIR / "data" / "pench_reserve_buffer_boundary.geojson"), "data"),
     (str(PROJECT_DIR / "data" / "pench_village_settlement_polygons.geojson"), "data"),
 ]
+added_files = [f for f in raw_added_files if os.path.exists(f[0])]
 
 # Collect hidden imports for FastAPI, Uvicorn, SQLite, Torch, Timm, and Ultralytics
 hidden_imports = [

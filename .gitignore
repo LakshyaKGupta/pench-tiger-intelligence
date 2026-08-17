@@ -45,6 +45,12 @@ dist-ssr/
 # Streamlit
 .streamlit/
 
-# Large Model Weights (>100MB)
+# Large Model Weights & Standalone Binaries (>100MB)
+build/
+tiger-intelligence/build/
+tiger-intelligence/dist/
+frontend/src-tauri/binaries/
+*.dmg
+*.app
 tiger-intelligence/models/*.ckpt
 tiger-intelligence/models/*.tar.gz

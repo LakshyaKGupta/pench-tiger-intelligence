@@ -132,8 +132,15 @@ class StorageManager:
         except ValueError:
             pass
 
-        # Check fallback allowed workspace in dev mode
+        # Check fallback allowed workspace or PyInstaller bundle
         if allow_workspaces:
+            if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+                bundle_root = Path(sys._MEIPASS)
+                try:
+                    target.relative_to(bundle_root.resolve())
+                    return target
+                except ValueError:
+                    pass
             project_root = Path(__file__).resolve().parent.parent.parent
             workspace_root = project_root.parent
             for allowed in [project_root, workspace_root]:

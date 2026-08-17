@@ -6,6 +6,8 @@
 
 set -e
 
+export PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$HOME/.cargo/bin:$PATH"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="${SCRIPT_DIR}/tiger-intelligence"
 FRONTEND_DIR="${SCRIPT_DIR}/frontend"

@@ -40,7 +40,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "category": "Science",
+    "category": "Education",
     "shortDescription": "Pench Tiger Reserve Camera Trap Intelligence System",
     "longDescription": "Automated offline camera-trap triage, stripe pattern individual tiger identification, and movement intelligence for Pench Tiger Reserve.",
     "macOS": {
