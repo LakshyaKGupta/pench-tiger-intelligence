@@ -21,6 +21,7 @@ import numpy as np
 # Add tiger-intelligence to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.config import REID_CONFIDENT_THRESHOLD, REID_REVIEW_THRESHOLD
 from app.reid.extractor import DEFAULT_REID_MODEL, TigerStripeFeatureExtractor
 from app.reid.matcher import TigerReIDMatcher
 
@@ -91,8 +92,8 @@ def verify_dataset_integrity(
 
 def run_held_out_reid_benchmark(
     dataset_base_dir: Optional[str] = None,
-    confident_threshold: float = 0.65,
-    review_threshold: float = 0.45,
+    confident_threshold: float = REID_CONFIDENT_THRESHOLD,
+    review_threshold: float = REID_REVIEW_THRESHOLD,
     model_name: str = DEFAULT_REID_MODEL,
 ) -> Dict:
     """

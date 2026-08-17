@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "TIGERTRACK AI",
+  "version": "3.2.0",
+  "identifier": "org.pench.tigertrack",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../.output/public"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "TIGERTRACK AI — Pench Tiger Reserve Intelligence Platform",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "theme": "Dark",
+        "transparent": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Science",
+    "shortDescription": "Pench Tiger Reserve Camera Trap Intelligence System",
+    "longDescription": "Automated offline camera-trap triage, stripe pattern individual tiger identification, and movement intelligence for Pench Tiger Reserve.",
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "frameworks": []
+    },
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      }
+    }
+  }
+}

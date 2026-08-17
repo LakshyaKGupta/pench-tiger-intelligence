@@ -22,14 +22,15 @@ import numpy as np
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from app.config import TRIAGE_KEEP_THRESHOLD, TRIAGE_QUARANTINE_THRESHOLD
 from app.detection.detector import CameraTrapDetector
 from app.detection.triage import CameraTrapTriagePolicy, TriageAction
 
 
 def run_real_detector_benchmark(
     ground_truth_path: Optional[str] = None,
-    keep_threshold: float = 0.15,
-    quarantine_threshold: float = 0.08,
+    keep_threshold: float = TRIAGE_KEEP_THRESHOLD,
+    quarantine_threshold: float = TRIAGE_QUARANTINE_THRESHOLD,
 ) -> Dict:
     """
     Run empirical side-by-side benchmark of YOLOv8n vs MegaDetector V6 on 100 REAL camera-trap images.

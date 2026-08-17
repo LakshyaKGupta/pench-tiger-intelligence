@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -30,10 +31,61 @@ class TigerDatabase:
         return conn
 
     def _init_db(self):
-        """Initialize tables using schema.sql."""
+        """Initialize tables using schema.sql, then apply any pending migrations."""
         schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
         with self._get_connection() as conn:
             conn.executescript(schema_sql)
+        self._apply_migrations()
+
+    def _apply_migrations(self):
+        """Add columns introduced after initial schema without breaking existing DBs."""
+        with self._get_connection() as conn:
+            existing_det_cols = {row[1] for row in conn.execute("PRAGMA table_info(detections)").fetchall()}
+            if "original_reid_tiger_id" not in existing_det_cols:
+                conn.execute("ALTER TABLE detections ADD COLUMN original_reid_tiger_id TEXT")
+            if "original_reid_similarity" not in existing_det_cols:
+                conn.execute("ALTER TABLE detections ADD COLUMN original_reid_similarity REAL")
+            if "original_reid_confidence_level" not in existing_det_cols:
+                conn.execute("ALTER TABLE detections ADD COLUMN original_reid_confidence_level TEXT")
+            if "human_decision" not in existing_det_cols:
+                conn.execute("ALTER TABLE detections ADD COLUMN human_decision TEXT")
+            if "human_actor" not in existing_det_cols:
+                conn.execute("ALTER TABLE detections ADD COLUMN human_actor TEXT")
+            if "human_timestamp" not in existing_det_cols:
+                conn.execute("ALTER TABLE detections ADD COLUMN human_timestamp TEXT")
+
+            existing_alert_cols = {row[1] for row in conn.execute("PRAGMA table_info(alerts)").fetchall()}
+            if "status" not in existing_alert_cols:
+                conn.execute("ALTER TABLE alerts ADD COLUMN status TEXT DEFAULT 'OPEN'")
+            if "resolution_notes" not in existing_alert_cols:
+                conn.execute("ALTER TABLE alerts ADD COLUMN resolution_notes TEXT")
+            if "resolved_by" not in existing_alert_cols:
+                conn.execute("ALTER TABLE alerts ADD COLUMN resolved_by TEXT")
+            if "resolved_at" not in existing_alert_cols:
+                conn.execute("ALTER TABLE alerts ADD COLUMN resolved_at TEXT")
+
+            conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_movement_tiger_det ON movement_records(tiger_id, detection_id)")
+
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS pipeline_runs (
+                run_id TEXT PRIMARY KEY,
+                source_type TEXT NOT NULL,
+                source_path TEXT NOT NULL,
+                status TEXT NOT NULL,
+                current_stage TEXT,
+                images_discovered INTEGER DEFAULT 0,
+                images_processed INTEGER DEFAULT 0,
+                duplicates INTEGER DEFAULT 0,
+                corrupt_files INTEGER DEFAULT 0,
+                tigers_detected INTEGER DEFAULT 0,
+                review_required INTEGER DEFAULT 0,
+                alerts_generated INTEGER DEFAULT 0,
+                error_message TEXT,
+                deliverables_dir TEXT,
+                started_at TEXT,
+                completed_at TEXT
+            )
+            """)
 
     # ── Camera Stations & Survey History ───────────────────────────────────────
 
@@ -349,7 +401,7 @@ class TigerDatabase:
         alert_type: str,
         severity: str,
         tiger_id: str,
-        station_id: str,
+        station_id: Optional[str],
         timestamp: str,
         title: str,
         explanation: str,
@@ -362,19 +414,133 @@ class TigerDatabase:
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(alert_id) DO NOTHING
         """
+        stn = station_id if station_id else None
         with self._get_connection() as conn:
             conn.execute(
                 sql,
                 (
-                    alert_id, alert_type, severity, tiger_id, station_id,
+                    alert_id, alert_type, severity, tiger_id, stn,
                     timestamp, title, explanation, json.dumps(evidence_data)
                 )
             )
 
-    def get_active_alerts(self) -> List[dict]:
+    def update_alert_status(
+        self,
+        alert_id: str,
+        new_status: str,
+        actor: str = "OFFICER_PATIL",
+        notes: str = "",
+    ) -> Optional[dict]:
+        """
+        Transition an alert to OPEN, ACKNOWLEDGED, RESOLVED, FALSE_POSITIVE, or SUPPRESSED.
+        Preserves original alert evidence and appends a forensic audit log.
+        """
+        valid_statuses = {"OPEN", "ACKNOWLEDGED", "RESOLVED", "FALSE_POSITIVE", "SUPPRESSED"}
+        if new_status not in valid_statuses:
+            raise ValueError(f"Invalid alert status '{new_status}'. Allowed: {valid_statuses}")
+
+        timestamp = datetime.now().isoformat()
+        is_dismissed = 1 if new_status in ("RESOLVED", "FALSE_POSITIVE", "SUPPRESSED") else 0
+
         with self._get_connection() as conn:
-            rows = conn.execute("SELECT * FROM alerts WHERE is_dismissed = 0 ORDER BY timestamp DESC").fetchall()
-            return [dict(r) for r in rows]
+            row = conn.execute("SELECT * FROM alerts WHERE alert_id = ?", (alert_id,)).fetchone()
+            if not row:
+                return None
+            prev_status = row["status"] if "status" in row.keys() and row["status"] else "OPEN"
+
+            conn.execute("""
+                UPDATE alerts SET
+                    status = ?,
+                    is_dismissed = ?,
+                    resolution_notes = ?,
+                    resolved_by = ?,
+                    resolved_at = ?
+                WHERE alert_id = ?
+            """, (new_status, is_dismissed, notes, actor, timestamp, alert_id))
+
+        self.log_audit(
+            entity_type="alert",
+            entity_id=alert_id,
+            action=f"alert_{new_status.lower()}",
+            actor=actor,
+            details=json.dumps({
+                "previous_status": prev_status,
+                "new_status": new_status,
+                "reason": notes,
+                "timestamp": timestamp,
+            }),
+        )
+        return {
+            "alert_id": alert_id,
+            "previous_status": prev_status,
+            "new_status": new_status,
+            "actor": actor,
+            "notes": notes,
+            "timestamp": timestamp,
+        }
+
+    # ── Ingestion Pipeline Runs ────────────────────────────────────────────────
+
+    def record_pipeline_run(
+        self,
+        run_id: str,
+        source_type: str,
+        source_path: str,
+        status: str = "RUNNING",
+        current_stage: str = "DISCOVERING",
+        images_discovered: int = 0,
+    ):
+        timestamp = datetime.now().isoformat()
+        sql = """
+        INSERT INTO pipeline_runs (
+            run_id, source_type, source_path, status, current_stage,
+            images_discovered, started_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(run_id) DO UPDATE SET
+            status=excluded.status,
+            current_stage=excluded.current_stage,
+            images_discovered=excluded.images_discovered
+        """
+        with self._get_connection() as conn:
+            conn.execute(sql, (run_id, source_type, source_path, status, current_stage, images_discovered, timestamp))
+
+    def update_pipeline_run(
+        self,
+        run_id: str,
+        status: str,
+        current_stage: Optional[str] = None,
+        images_processed: int = 0,
+        duplicates: int = 0,
+        corrupt_files: int = 0,
+        tigers_detected: int = 0,
+        review_required: int = 0,
+        alerts_generated: int = 0,
+        error_message: Optional[str] = None,
+        deliverables_dir: Optional[str] = None,
+    ):
+        timestamp = datetime.now().isoformat()
+        completed_at = timestamp if status in ("COMPLETED", "FAILED", "CANCELLED") else None
+        sql = """
+        UPDATE pipeline_runs SET
+            status = ?,
+            current_stage = COALESCE(?, current_stage),
+            images_processed = ?,
+            duplicates = ?,
+            corrupt_files = ?,
+            tigers_detected = ?,
+            review_required = ?,
+            alerts_generated = ?,
+            error_message = ?,
+            deliverables_dir = COALESCE(?, deliverables_dir),
+            completed_at = COALESCE(?, completed_at)
+        WHERE run_id = ?
+        """
+        with self._get_connection() as conn:
+            conn.execute(sql, (
+                status, current_stage, images_processed, duplicates,
+                corrupt_files, tigers_detected, review_required, alerts_generated,
+                error_message, deliverables_dir, completed_at, run_id
+            ))
 
     # ── Audit Log ─────────────────────────────────────────────────────────────
 
@@ -384,3 +550,137 @@ class TigerDatabase:
                 "INSERT INTO audit_log (entity_type, entity_id, action, actor, details) VALUES (?, ?, ?, ?, ?)",
                 (entity_type, entity_id, action, actor, details)
             )
+
+    # ── Human-in-the-Loop Review ─────────────────────────────────────────────
+
+    def apply_human_correction(
+        self,
+        detection_id: str,
+        human_decision: str,          # 'CONFIRMED', 'REJECTED', 'REASSIGNED', 'NEW_TIGER'
+        corrected_tiger_id: Optional[str] = None,  # final identity after human decision
+        actor: str = "OFFICER",
+    ) -> bool:
+        """
+        Persist a human review decision for a detection.
+
+        Stores:
+          - original_reid_tiger_id  (snapshotted from current reid_matched_tiger_id on first call)
+          - original_reid_similarity
+          - original_reid_confidence_level
+          - human_decision
+          - human_actor
+          - human_timestamp
+          - verified_tiger_id (the authoritative final identity)
+          - human_verified = 1
+
+        The original AI prediction is NEVER overwritten — only the human_* and verified_tiger_id
+        columns are updated.
+        """
+        with self._get_connection() as conn:
+            row = conn.execute(
+                "SELECT reid_matched_tiger_id, reid_similarity, reid_confidence_level "
+                "FROM detections WHERE detection_id = ?",
+                (detection_id,)
+            ).fetchone()
+            if row is None:
+                return False
+
+            # Snapshot original AI prediction the first time a human reviews this record
+            conn.execute(
+                """
+                UPDATE detections SET
+                    original_reid_tiger_id = COALESCE(original_reid_tiger_id, reid_matched_tiger_id),
+                    original_reid_similarity = COALESCE(original_reid_similarity, reid_similarity),
+                    original_reid_confidence_level = COALESCE(original_reid_confidence_level, reid_confidence_level),
+                    human_decision = ?,
+                    human_actor = ?,
+                    human_timestamp = ?,
+                    human_verified = 1,
+                    verified_tiger_id = ?
+                WHERE detection_id = ?
+                """,
+                (
+                    human_decision,
+                    actor,
+                    datetime.now().isoformat(),
+                    corrected_tiger_id,
+                    detection_id,
+                )
+            )
+
+        self.log_audit(
+            entity_type="detection",
+            entity_id=detection_id,
+            action="human_correction_applied",
+            actor=actor,
+            details=json.dumps({
+                "human_decision": human_decision,
+                "corrected_tiger_id": corrected_tiger_id,
+                "original_tiger_id": dict(row)["reid_matched_tiger_id"] if row else None,
+            }),
+        )
+        return True
+
+    def get_pending_reviews(self) -> List[dict]:
+        """
+        Return all detections in MEDIUM_REVIEW_REQUIRED state that have not yet been
+        reviewed by a human officer.
+        """
+        with self._get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT d.*, i.original_path, i.file_name
+                FROM detections d
+                JOIN images i ON d.image_id = i.image_id
+                WHERE d.reid_confidence_level = 'MEDIUM_REVIEW_REQUIRED'
+                  AND d.human_verified = 0
+                ORDER BY d.timestamp DESC
+                """
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    # ── Absence Detection Support ─────────────────────────────────────────────
+
+    def get_tigers_for_absence_check(self) -> List[dict]:
+        """
+        Return all tigers with enough sighting history for absence evaluation.
+        For each tiger returns:
+          tiger_id, last_seen (ISO timestamp), sighting_timestamps (list),
+          known_station_ids (list of stations tiger has been seen at)
+        """
+        tigers = self.get_all_tigers()
+        results = []
+        for t in tigers:
+            tid = t["tiger_id"]
+            history = self.get_tiger_movement_history(tid)
+            if not history:
+                continue
+            timestamps = [h["timestamp"] for h in history if h.get("timestamp")]
+            station_ids = list({h["station_id"] for h in history if h.get("station_id")})
+            results.append({
+                "tiger_id": tid,
+                "last_seen": history[-1]["timestamp"],
+                "sighting_timestamps": timestamps,
+                "known_station_ids": station_ids,
+            })
+        return results
+
+    def get_active_stations_in_set(self, station_ids: List[str], as_of: str) -> List[dict]:
+        """
+        Return stations from the given list that were active (active_from <= as_of
+        and active_to is NULL or active_to >= as_of).
+        """
+        if not station_ids:
+            return []
+        placeholders = ",".join("?" * len(station_ids))
+        with self._get_connection() as conn:
+            rows = conn.execute(
+                f"""
+                SELECT * FROM camera_stations
+                WHERE station_id IN ({placeholders})
+                  AND active_from <= ?
+                  AND (active_to IS NULL OR active_to >= ?)
+                """,
+                tuple(station_ids) + (as_of, as_of)
+            ).fetchall()
+            return [dict(r) for r in rows]

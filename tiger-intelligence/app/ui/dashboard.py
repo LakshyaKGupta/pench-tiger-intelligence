@@ -20,6 +20,8 @@ import plotly.graph_objects as go
 import streamlit as st
 from streamlit_folium import st_folium
 
+from app.database.db import TigerDatabase
+
 # Page Configuration
 st.set_page_config(
     page_title="Pench Tiger Intelligence System",
@@ -37,6 +39,12 @@ def get_db():
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     return conn
+
+
+@st.cache_resource
+def get_tiger_db() -> TigerDatabase:
+    """Return a TigerDatabase instance (cached for the Streamlit session)."""
+    return TigerDatabase(DB_PATH)
 
 
 # ── Custom CSS Styling ────────────────────────────────────────────────────────
@@ -259,47 +267,105 @@ elif nav == "🚨 Explainable Alerts Feed":
             """, unsafe_allow_html=True)
 
 
-# ── TAB 5: Human Review Queue ─────────────────────────────────────────────────
+# ── TAB 5: Human Review Queue ────────────────────────────────────────────────
 elif nav == "🔍 Human Review Queue":
     st.title("Human-in-the-Loop Re-ID Verification Queue")
-    st.caption("Staged ambiguous tiger matches (65%–85% confidence) for side-by-side human audit")
+    st.caption("Ambiguous tiger matches in [45%–65%) confidence band staged for side-by-side human audit. Original AI prediction is always preserved.")
 
-    conn = get_db()
-    reviews = pd.read_sql_query(
-        """
-        SELECT d.*, i.original_path, i.file_name
-        FROM detections d
-        JOIN images i ON d.image_id = i.image_id
-        WHERE d.reid_confidence_level = 'MEDIUM_REVIEW_REQUIRED'
-        """, conn
-    )
+    tiger_db = get_tiger_db()
+    pending = tiger_db.get_pending_reviews()
 
-    if reviews.empty:
+    if not pending:
         st.success("✅ No pending reviews in queue. All detections classified with high confidence.")
     else:
-        st.write(f"**{len(reviews)} items awaiting audit.**")
-        for _, row in reviews.iterrows():
-            with st.expander(f"Review Match: {row['file_name']} -> Candidate {row['reid_matched_tiger_id']} (Sim: {row['reid_similarity']:.1%})"):
-                col1, col2 = st.columns(2)
+        st.write(f"**{len(pending)} detection(s) awaiting officer review.**")
+        all_tiger_ids = [t["tiger_id"] for t in tiger_db.get_all_tigers()]
+
+        for row in pending:
+            det_id = row["detection_id"]
+            with st.expander(
+                f"🔎 Detection `{det_id}` — Candidate: `{row['reid_matched_tiger_id']}` "
+                f"(Similarity: {row['reid_similarity']:.1%})  |  Station: {row.get('station_id', 'N/A')}  |  {row.get('timestamp', '')[:10]}"
+            ):
+                col1, col2, col3 = st.columns([2, 2, 3])
+
                 with col1:
-                    st.write("**Query Image:**")
-                    if Path(row["original_path"]).exists():
-                        st.image(row["original_path"], use_container_width=True)
+                    st.markdown("**Query Image**")
+                    img_path = Path(row.get("original_path", ""))
+                    if img_path.exists():
+                        st.image(str(img_path), use_container_width=True)
+                    else:
+                        st.warning(f"Image not found: `{img_path.name}`")
+
                 with col2:
-                    st.write(f"**Candidate Reference ({row['reid_matched_tiger_id']}):**")
-                    if row["crop_path"] and Path(row["crop_path"]).exists():
-                        st.image(row["crop_path"], caption="Extracted Flank Crop", use_container_width=True)
+                    st.markdown(f"**Candidate Reference (`{row['reid_matched_tiger_id']}`)**")
+                    crop_path = Path(row.get("crop_path") or "")
+                    if crop_path.exists():
+                        st.image(str(crop_path), caption="Extracted Flank Crop", use_container_width=True)
+                    else:
+                        st.info("No crop image stored.")
 
-                btn1, btn2, _ = st.columns([1, 1, 3])
-                with btn1:
-                    if st.button("✓ Confirm Match", key=f"conf_{row['detection_id']}"):
-                        st.success(f"Confirmed match to {row['reid_matched_tiger_id']}")
-                with btn2:
-                    if st.button("✗ Register as New Tiger", key=f"rej_{row['detection_id']}"):
-                        st.warning("Assigned new Tiger ID.")
+                with col3:
+                    st.markdown("**AI Prediction (preserved)**")
+                    st.json({
+                        "ai_candidate": row.get("reid_matched_tiger_id"),
+                        "similarity": f"{row['reid_similarity']:.3f}",
+                        "confidence_band": row.get("reid_confidence_level"),
+                        "detector_species_conf": f"{row.get('species_confidence', 0):.3f}",
+                        "station": row.get("station_id"),
+                        "timestamp": row.get("timestamp"),
+                    })
+
+                    st.markdown("**Officer Decision**")
+                    btn_col1, btn_col2 = st.columns(2)
+
+                    with btn_col1:
+                        if st.button("✓ Confirm Match", key=f"conf_{det_id}", type="primary"):
+                            ok = tiger_db.apply_human_correction(
+                                detection_id=det_id,
+                                human_decision="CONFIRMED",
+                                corrected_tiger_id=row["reid_matched_tiger_id"],
+                                actor="OFFICER_UI",
+                            )
+                            if ok:
+                                st.success(f"Confirmed: Detection `{det_id}` → `{row['reid_matched_tiger_id']}`. Decision persisted to database.")
+                                st.rerun()
+                            else:
+                                st.error("Failed to persist decision. Check database connection.")
+
+                    with btn_col2:
+                        if st.button("✗ Register as New Tiger", key=f"new_{det_id}"):
+                            ok = tiger_db.apply_human_correction(
+                                detection_id=det_id,
+                                human_decision="NEW_TIGER",
+                                corrected_tiger_id=None,
+                                actor="OFFICER_UI",
+                            )
+                            if ok:
+                                st.warning(f"Marked as new/unknown tiger. Detection `{det_id}` updated. Enroll new profile manually.")
+                                st.rerun()
+                            else:
+                                st.error("Failed to persist decision.")
+
+                    # Reassign to a different known tiger
+                    with st.form(key=f"reassign_{det_id}"):
+                        st.markdown("**Reassign to a different known tiger:**")
+                        chosen_id = st.selectbox("Select tiger ID", options=all_tiger_ids, key=f"sel_{det_id}")
+                        if st.form_submit_button("🔁 Reassign"):
+                            ok = tiger_db.apply_human_correction(
+                                detection_id=det_id,
+                                human_decision="REASSIGNED",
+                                corrected_tiger_id=chosen_id,
+                                actor="OFFICER_UI",
+                            )
+                            if ok:
+                                st.success(f"Reassigned `{det_id}` → `{chosen_id}`. Persisted to database.")
+                                st.rerun()
+                            else:
+                                st.error("Failed to persist reassignment.")
 
 
-# ── TAB 6: Data Quality & Audit Logs ──────────────────────────────────────────
+# ── TAB 6: Data Quality & Audit Logs ──────────────────────────────────────────────
 elif nav == "⚙️ Data Quality & Audit Logs":
     st.title("Camera Trap Data Quality & Audit Trails")
     conn = get_db()

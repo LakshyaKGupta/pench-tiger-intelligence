@@ -22,6 +22,7 @@ import numpy as np
 
 # Internal module imports
 from app.alerts.engine import AlertEngine
+from app.config import TRIAGE_KEEP_THRESHOLD, TRIAGE_QUARANTINE_THRESHOLD
 from app.database.db import TigerDatabase
 from app.detection.detector import CameraTrapDetector
 from app.detection.triage import CameraTrapTriagePolicy, TriageAction
@@ -50,8 +51,8 @@ class TigerIntelligencePipeline:
         species_model_b: Optional[str] = None,
         reid_backbone: str = DEFAULT_REID_MODEL,
         batch_size: int = 16,
-        keep_threshold: float = 0.15,
-        quarantine_threshold: float = 0.08,
+        keep_threshold: float = TRIAGE_KEEP_THRESHOLD,
+        quarantine_threshold: float = TRIAGE_QUARANTINE_THRESHOLD,
     ):
         proj_root = Path(__file__).resolve().parent.parent
         db_path = db_path or str(proj_root / "database" / "tiger.db")
@@ -622,6 +623,21 @@ class TigerIntelligencePipeline:
                     home_range_area_km2=occ["home_range_km2"],
                     last_seen=last_seen,
                 )
+
+        # Prolonged Absence Check (R5): evaluate every known tiger as of the latest survey batch
+        batch_timestamps = [r.get("timestamp") for r in valid_records if r.get("timestamp")]
+        eval_timestamp = max(batch_timestamps) if batch_timestamps else datetime.now().isoformat()
+        absence_alerts = self.alert_engine.evaluate_all_absences(
+            current_timestamp=eval_timestamp
+        )
+        for a in absence_alerts:
+            log_audit("ABSENCE_ALERT_RAISED", {
+                "alert_id": a.get("alert_id"),
+                "title": a.get("title"),
+                "severity": a.get("severity"),
+                "tiger_id": a.get("tiger_id"),
+            })
+        all_generated_alerts.extend(absence_alerts)
 
         elapsed = time.time() - start_time
         summary = {

@@ -19,13 +19,28 @@ venv/
 *.swp
 *.swo
 
-# Project temp files
+# Project temp files & run artifacts
 tiger-intelligence/data/processed/anonymized/
 tiger-intelligence/data/processed/.tmp_enhanced/
+tiger-intelligence/data/runs/
+tiger-intelligence/data/pipeline_run_audit_test/
+tiger-intelligence/tests/scratch_*/
 tiger-intelligence/evaluation/dataset/atrw_raw/
 output/
 .tmp_enhanced/
 *.log
+
+# Frontend & Desktop build artifacts
+node_modules/
+.output/
+.tanstack/
+.wrangler/
+.lovable/
+target/
+src-tauri/target/
+frontend/src-tauri/target/
+dist/
+dist-ssr/
 
 # Streamlit
 .streamlit/

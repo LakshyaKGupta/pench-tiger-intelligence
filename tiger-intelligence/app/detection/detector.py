@@ -74,6 +74,9 @@ class ImageDetectionResult:
     boxes: List[DetectionBox]
 
 
+from app.config import TRIAGE_QUARANTINE_THRESHOLD
+
+
 class CameraTrapDetector:
     """
     High-throughput offline Subject Detector for Camera Trap Triage.
@@ -83,7 +86,7 @@ class CameraTrapDetector:
     def __init__(
         self,
         model_path: str = "tiger-intelligence/models/MDV6-mit-yolov9-c.ckpt",
-        confidence_threshold: float = 0.20,
+        confidence_threshold: float = TRIAGE_QUARANTINE_THRESHOLD,
         batch_size: int = 16,
         imgsz: int = 640,
         device: Optional[str] = None,

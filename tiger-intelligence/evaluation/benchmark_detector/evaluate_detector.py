@@ -23,12 +23,13 @@ import numpy as np
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from app.config import TRIAGE_KEEP_THRESHOLD
 from app.detection.detector import CameraTrapDetector
 
 
 def run_detector_benchmark(
     benchmark_dir: Optional[str] = None,
-    conf_threshold: float = 0.20,
+    conf_threshold: float = TRIAGE_KEEP_THRESHOLD,
     batch_size: int = 16,
 ) -> Dict:
     """

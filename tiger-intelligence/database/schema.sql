@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS movement_records (
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     survey_id TEXT,
+    UNIQUE(tiger_id, detection_id),
     FOREIGN KEY (tiger_id) REFERENCES tigers(tiger_id),
     FOREIGN KEY (detection_id) REFERENCES detections(detection_id),
     FOREIGN KEY (station_id) REFERENCES camera_stations(station_id)
@@ -120,7 +121,11 @@ CREATE TABLE IF NOT EXISTS alerts (
     title TEXT NOT NULL,
     explanation TEXT NOT NULL,
     evidence_data TEXT,                 -- JSON payload (coordinates, survey effort, distances, days absent)
+    status TEXT DEFAULT 'OPEN',         -- 'OPEN', 'ACKNOWLEDGED', 'RESOLVED', 'FALSE_POSITIVE', 'SUPPRESSED'
     is_dismissed INTEGER DEFAULT 0,
+    resolution_notes TEXT,
+    resolved_by TEXT,
+    resolved_at TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tiger_id) REFERENCES tigers(tiger_id),
     FOREIGN KEY (station_id) REFERENCES camera_stations(station_id)
@@ -135,4 +140,24 @@ CREATE TABLE IF NOT EXISTS audit_log (
     action TEXT NOT NULL,               -- 'ingested', 'quarantined', 'retained', 'reid_matched', 'human_overridden'
     actor TEXT DEFAULT 'SYSTEM_PIPELINE',
     details TEXT
+);
+
+-- 8. Ingestion Pipeline Runs (Batch Tracking & Telemetry)
+CREATE TABLE IF NOT EXISTS pipeline_runs (
+    run_id TEXT PRIMARY KEY,
+    source_type TEXT NOT NULL,
+    source_path TEXT NOT NULL,
+    status TEXT NOT NULL,               -- 'PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'
+    current_stage TEXT,                 -- 'DISCOVERING', 'VALIDATING', 'DEDUPLICATING', 'METADATA_EXTRACTION', 'TRIAGE', 'DETECTION', 'REID', 'MOVEMENT', 'ALERTS', 'COMPLETED'
+    images_discovered INTEGER DEFAULT 0,
+    images_processed INTEGER DEFAULT 0,
+    duplicates INTEGER DEFAULT 0,
+    corrupt_files INTEGER DEFAULT 0,
+    tigers_detected INTEGER DEFAULT 0,
+    review_required INTEGER DEFAULT 0,
+    alerts_generated INTEGER DEFAULT 0,
+    error_message TEXT,
+    deliverables_dir TEXT,
+    started_at TEXT,
+    completed_at TEXT
 );

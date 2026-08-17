@@ -14,6 +14,8 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
+from app.config import REID_CONFIDENT_THRESHOLD, REID_REVIEW_THRESHOLD
+
 
 @dataclass
 class MatchResult:
@@ -36,8 +38,8 @@ class TigerReIDMatcher:
 
     def __init__(
         self,
-        confident_threshold: float = 0.65,
-        review_threshold: float = 0.45,
+        confident_threshold: float = REID_CONFIDENT_THRESHOLD,
+        review_threshold: float = REID_REVIEW_THRESHOLD,
     ):
         self.confident_thr = confident_threshold
         self.review_thr = review_threshold

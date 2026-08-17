@@ -1,0 +1,334 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * TIGERTRACK AI design system — dark forest / night reserve palette.
+ * All colors use oklch. Never hardcode colors in components.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-forest: var(--forest);
+  --color-forest-deep: var(--forest-deep);
+  --color-olive: var(--olive);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-signal: var(--signal);
+  --color-alert: var(--alert);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root {
+  --radius: 0.35rem;
+
+  --background: oklch(0.16 0.012 150);
+  --foreground: oklch(0.955 0.008 95);
+
+  --card: oklch(0.205 0.014 155);
+  --card-foreground: oklch(0.955 0.008 95);
+  --popover: oklch(0.21 0.014 155);
+  --popover-foreground: oklch(0.955 0.008 95);
+
+  --primary: oklch(0.78 0.13 78);
+  --primary-foreground: oklch(0.17 0.02 90);
+
+  --secondary: oklch(0.26 0.02 155);
+  --secondary-foreground: oklch(0.95 0.008 95);
+
+  --muted: oklch(0.24 0.016 155);
+  --muted-foreground: oklch(0.7 0.015 130);
+
+  --accent: oklch(0.55 0.08 160);
+  --accent-foreground: oklch(0.97 0.008 95);
+
+  --destructive: oklch(0.6 0.19 27);
+  --destructive-foreground: oklch(0.97 0.008 95);
+
+  --border: oklch(0.3 0.018 155);
+  --input: oklch(0.3 0.018 155);
+  --ring: oklch(0.78 0.13 78);
+
+  --forest: oklch(0.32 0.045 158);
+  --forest-deep: oklch(0.13 0.014 155);
+  --olive: oklch(0.6 0.07 120);
+  --amber: oklch(0.78 0.13 78);
+  --amber-soft: oklch(0.86 0.09 88);
+  --signal: oklch(0.72 0.14 165);
+  --alert: oklch(0.68 0.17 45);
+
+  --chart-1: oklch(0.78 0.13 78);
+  --chart-2: oklch(0.72 0.14 165);
+  --chart-3: oklch(0.6 0.07 120);
+  --chart-4: oklch(0.68 0.17 45);
+  --chart-5: oklch(0.5 0.06 158);
+
+  --sidebar: oklch(0.19 0.014 155);
+  --sidebar-foreground: oklch(0.955 0.008 95);
+  --sidebar-primary: oklch(0.78 0.13 78);
+  --sidebar-primary-foreground: oklch(0.17 0.02 90);
+  --sidebar-accent: oklch(0.26 0.02 155);
+  --sidebar-accent-foreground: oklch(0.955 0.008 95);
+  --sidebar-border: oklch(0.3 0.018 155);
+  --sidebar-ring: oklch(0.78 0.13 78);
+
+  --gradient-night: radial-gradient(
+    120% 90% at 50% 0%,
+    oklch(0.26 0.03 158) 0%,
+    oklch(0.16 0.012 150) 55%,
+    oklch(0.11 0.01 155) 100%
+  );
+  --gradient-amber: linear-gradient(100deg, var(--amber-soft), var(--amber));
+  --shadow-deep: 0 24px 70px -30px oklch(0.05 0.02 155 / 0.9);
+  --shadow-glow: 0 0 40px -8px color-mix(in oklab, var(--amber) 45%, transparent);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+}
+
+@utility night-bg {
+  background-image: var(--gradient-night);
+}
+
+@utility text-amber-gradient {
+  background-image: var(--gradient-amber);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility panel {
+  background-color: color-mix(in oklab, var(--card) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 90%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+@utility data-chip {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@utility grid-lines {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--border) 55%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--border) 55%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 56px 56px;
+}
+
+@keyframes tt-breathe {
+  0%,
+  100% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.014) translateY(-0.6%);
+  }
+}
+
+@keyframes tt-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes tt-pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes tt-dash {
+  to {
+    stroke-dashoffset: -200;
+  }
+}
+
+@utility animate-breathe {
+  animation: tt-breathe 7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* slow, confident prowl — a long left-to-right saunter with weight shift */
+@keyframes tt-prowl {
+  0% {
+    transform: translate3d(-4%, 0, 0) scale(0.985);
+  }
+  25% {
+    transform: translate3d(-1.5%, -0.5%, 0) scale(0.995);
+  }
+  50% {
+    transform: translate3d(1.5%, 0.3%, 0) scale(1.005);
+  }
+  75% {
+    transform: translate3d(3.5%, -0.4%, 0) scale(0.998);
+  }
+  100% {
+    transform: translate3d(-4%, 0, 0) scale(0.985);
+  }
+}
+
+/* subtle shoulder roll / paw-step cadence */
+@keyframes tt-gait {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.4deg);
+  }
+  25% {
+    transform: translateY(-0.5%) rotate(0.15deg);
+  }
+  50% {
+    transform: translateY(0.35%) rotate(0.45deg);
+  }
+  75% {
+    transform: translateY(-0.4%) rotate(0.1deg);
+  }
+}
+
+@utility animate-prowl {
+  animation: tt-prowl 34s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+@utility animate-gait {
+  animation: tt-gait 4.6s ease-in-out infinite;
+}
+
+@utility animate-drift {
+  animation: tt-drift 9s ease-in-out infinite;
+}
+
+@utility animate-pulse-ring {
+  animation: tt-pulse-ring 2.8s ease-out infinite;
+}
+
+@utility tiger-mask {
+  mask-image: radial-gradient(
+    68% 62% at 50% 42%,
+    oklch(0 0 0) 55%,
+    transparent 100%
+  );
+}
+
+@utility btn-amber {
+  background-image: var(--gradient-amber);
+  color: var(--primary-foreground);
+}
+
+@keyframes tt-dash-sm {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@utility animate-trail-sm {
+  stroke-dasharray: 1.2 1.8;
+  animation: tt-dash-sm 6s linear infinite;
+}
+
+@utility animate-trail {
+  stroke-dasharray: 6 10;
+  animation: tt-dash 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

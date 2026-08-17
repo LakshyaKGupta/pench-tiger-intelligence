@@ -3,12 +3,14 @@ triage.py — Evidence-Preserving Triage Policy for Camera Trap Data
 Pench Tiger Reserve Camera Trap Intelligence System
 
 Decouples detection confidence from triage routing:
-  1. KEEP (High Confidence >= 0.20) -> Proceed to Species Classifier / Privacy Protector
-  2. REVIEW (Uncertain / Ambiguous [0.08, 0.20)) -> Route to Human Review Queue (Data Preserved)
-  3. QUARANTINE (High Confidence Blank < 0.08) -> Reversibly stage in quarantine (Never Deleted)
+  1. KEEP (High Confidence >= TRIAGE_KEEP_THRESHOLD) -> Proceed to Species Classifier / Privacy Protector
+  2. REVIEW (Uncertain / Ambiguous [QUARANTINE_THRESHOLD, KEEP_THRESHOLD)) -> Route to Human Review Queue (Data Preserved)
+  3. QUARANTINE (High Confidence Blank < TRIAGE_QUARANTINE_THRESHOLD) -> Reversibly stage in quarantine (Never Deleted)
 
 Safety Invariant:
   Uncertainty NEVER causes destructive deletion. Low model confidence routes to REVIEW, not QUARANTINE.
+
+All threshold defaults are read from app.config — do NOT hardcode here.
 """
 
 from dataclasses import dataclass
@@ -16,6 +18,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from app.config import TRIAGE_KEEP_THRESHOLD, TRIAGE_QUARANTINE_THRESHOLD
 from app.detection.detector import ImageDetectionResult
 
 
@@ -44,8 +47,8 @@ class CameraTrapTriagePolicy:
 
     def __init__(
         self,
-        keep_threshold: float = 0.20,
-        quarantine_threshold: float = 0.08,
+        keep_threshold: float = TRIAGE_KEEP_THRESHOLD,
+        quarantine_threshold: float = TRIAGE_QUARANTINE_THRESHOLD,
     ):
         self.keep_threshold = keep_threshold
         self.quarantine_threshold = quarantine_threshold
