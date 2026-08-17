@@ -67,7 +67,7 @@ Before building C3/C4, five core architectural questions were locked into the sy
 ---
 
 ### 2. Genuine Camera-Trap Field Benchmark (`evaluation/benchmark_detector/evaluate_real_detector.py`)
-Evaluated across **100 genuine camera-trap images** (55 real wildlife captures, 41 real field blanks with swaying vegetation/rain/night IR, 4 field patrol staff):
+Evaluated across a **100-image mixed real-world wildlife/camera-trap benchmark** (45 TheWilds camera-trap frames containing 41 real blanks & 4 field patrols, 53 ATRW tiger frames across various postures/occlusions, and 2 additional real wildlife samples):
 
 | Metric | YOLOv8n (CPU Baseline) | MegaDetector V6 (MPS Metal) | MegaDetector V6 (Zenodo MDV6 CPU) |
 |---|---|---|---|
