@@ -1,0 +1,114 @@
+name: Cross-Platform Desktop Release Matrix
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-test-backend:
+    name: Backend Test Suite (Python 3.11+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tiger-intelligence/requirements.txt
+      - name: Run Full 24-Test Acceptance Suite
+        run: |
+          cd tiger-intelligence
+          python -m unittest discover tests
+
+  build-desktop-matrix:
+    name: Package Desktop App (${{ matrix.platform }})
+    needs: build-and-test-backend
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-14
+            target: aarch64-apple-darwin
+            os_name: macOS_arm64
+            bundle_ext: dmg
+          - platform: macos-13
+            target: x86_64-apple-darwin
+            os_name: macOS_x64
+            bundle_ext: dmg
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            os_name: Windows_x64
+            bundle_ext: exe
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies & PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r tiger-intelligence/requirements.txt
+
+      - name: Build Python Sidecar (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd tiger-intelligence
+          pyinstaller --noconfirm pyinstaller.spec
+          mkdir -p ../frontend/src-tauri/binaries
+          cp dist/tiger-intelligence-sidecar ../frontend/src-tauri/binaries/tiger-intelligence-sidecar-${{ matrix.target }}
+
+      - name: Build Python Sidecar (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd tiger-intelligence
+          pyinstaller --noconfirm pyinstaller.spec
+          if not exist "..\frontend\src-tauri\binaries" mkdir "..\frontend\src-tauri\binaries"
+          copy /y "dist\tiger-intelligence-sidecar.exe" "..\frontend\src-tauri\binaries\tiger-intelligence-sidecar-${{ matrix.target }}.exe"
+
+      - name: Build Frontend & Tauri App (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+          npm run tauri build -- --target ${{ matrix.target }}
+
+      - name: Build Frontend & Tauri App (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd frontend
+          call npm ci
+          call npm run build
+          call npm run tauri build -- --target ${{ matrix.target }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TIGERTRACK_AI_${{ matrix.os_name }}
+          path: |
+            frontend/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+            frontend/src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
+            frontend/src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
+          if-no-files-found: warn

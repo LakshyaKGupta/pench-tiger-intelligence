@@ -6,10 +6,10 @@ import tiger from "@/assets/tiger-hero.png";
 import forest from "@/assets/forest-night.jpg";
 
 const dataCards = [
-  { label: "Tiger ID", value: "PT-017", pos: "left-[4%] top-[26%]" },
-  { label: "Confidence", value: "97.4%", pos: "right-[5%] top-[20%]" },
-  { label: "Last Capture", value: "06:42 AM", pos: "right-[8%] bottom-[26%]" },
-  { label: "Station", value: "PT-04", pos: "left-[7%] bottom-[20%]" },
+  { label: "Sample Profile", value: "T-PENCH-001", pos: "left-[4%] top-[26%]" },
+  { label: "Re-ID Match", value: "95.1% Sim", pos: "right-[5%] top-[20%]" },
+  { label: "Field Sighting", value: "08:30 AM", pos: "right-[8%] bottom-[26%]" },
+  { label: "Station STN02", value: "Pench Core", pos: "left-[7%] bottom-[20%]" },
 ];
 
 function useMouseParallax(reduced: boolean) {
@@ -100,7 +100,7 @@ export function Hero() {
         >
           <span className="eyebrow inline-flex items-center gap-2 rounded-sm border border-border px-3 py-1.5">
             <span className="size-1.5 rounded-full bg-signal" />
-            Camera-Trap Intelligence · Pench
+            Autonomous Camera-Trap Intelligence · 100% Offline
           </span>
 
           <h1 className="mt-7 text-[clamp(2.6rem,7vw,5rem)] leading-[0.95] font-semibold text-balance">
@@ -122,11 +122,11 @@ export function Hero() {
               to="/dashboard"
               className="group inline-flex items-center gap-2 rounded-sm btn-amber px-6 py-3.5 text-sm font-semibold shadow-[var(--shadow-glow)] transition-transform hover:-translate-y-0.5"
             >
-              Launch Live Dashboard
+              Launch Operational Dashboard
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <a
-              href="#pipeline"
+              href="#how-it-works"
               className="inline-flex items-center gap-2 rounded-sm border border-border px-6 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               <Play className="size-4 text-primary" />
@@ -134,18 +134,21 @@ export function Hero() {
             </a>
           </div>
 
-          <dl className="mt-12 grid max-w-lg grid-cols-3 gap-4 border-t border-border pt-6">
-            {[
-              ["47", "Tigers identified"],
-              ["12,840", "Images processed"],
-              ["86", "Camera stations"],
-            ].map(([v, l]) => (
-              <div key={l}>
-                <dt className="font-display text-2xl font-semibold text-foreground">{v}</dt>
-                <dd className="data-chip mt-1 text-muted-foreground">{l}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="mt-12 border-t border-border pt-6">
+            <dl className="grid max-w-lg grid-cols-3 gap-4">
+              {[
+                ["100%", "Offline Operation", "Zero Cloud Required"],
+                ["7-Stage", "Autonomous AI", "MegaDescriptor Re-ID"],
+                ["SQLite", "Source of Truth", "Local ACID Persistence"],
+              ].map(([v, l, sub]) => (
+                <div key={l}>
+                  <dt className="font-display text-xl font-semibold text-foreground">{v}</dt>
+                  <dd className="data-chip mt-1 text-muted-foreground font-medium">{l}</dd>
+                  <span className="text-[10px] text-muted-foreground/70 block mt-0.5">{sub}</span>
+                </div>
+              ))}
+            </dl>
+          </div>
         </motion.div>
 
         {/* Tiger visual */}

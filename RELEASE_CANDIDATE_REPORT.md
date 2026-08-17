@@ -4,24 +4,29 @@
 **Architecture**: Offline Native Desktop Application (Tauri v2 + Rust Core Shell + React 18 TypeScript UI + Local Python 3.14 PyInstaller Standalone Sidecar + Embedded SQLite + Local PyTorch MegaDescriptor Re-ID)  
 **Host Build Architecture**: Darwin arm64 (Apple Silicon)  
 **Report Generated**: 2026-08-17  
-**Overall Release Verdict**: **READY FOR COMPETITION DEPLOYMENT** / **READY FOR INTERNAL FIELD TEST**
+**Overall Release Verdict**: **Competition-ready offline prototype validated on macOS (Apple Silicon); Windows/macOS-Intel packaging configured via CI/CD matrix**
 
 ---
 
 ## 1. Executive Summary & Verification Matrix
 
-| Phase | Category | Scope & Verification Invariant | Status | Evidence / Metrics |
-|---|---|---|:---:|---|
-| **Phase 1** | Packaging & Config Audit | Tauri v2, PyInstaller spec, `sys._MEIPASS` discovery, dynamic port allocation, clean schema bundle | **PASSED** | Bundled `schema.sql`, `models/`, `data/` resolved from `sys._MEIPASS` when frozen. |
-| **Phase 2** | Real Build Artifacts | Compile standalone sidecar binary + native Rust shell + packaged `.app` and `.dmg` | **PASSED** | `.app` (653 MB), `.dmg` (647 MB), sidecar (640 MB Mach-O 64-bit arm64). |
-| **Phase 3** | Clean Install Acceptance | Fresh database initialization, zero existing state, schema table creation | **PASSED** | 8 tables verified (`images`, `detections`, `tigers`, `alerts`, `camera_stations`, etc.). |
-| **Phase 4** | 100% Offline Invariants | Zero network egress, zero HF/CDN downloads, local weights verification | **PASSED** | `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`, 768-dim MegaDescriptor initialized locally. |
-| **Phase 5** | Real Ingestion Acceptance | End-to-end SD-card ingestion (`data/test_messy_sdcard`), triage, Re-ID, alert engine | **PASSED** | 9 files scanned, 1 corrupt quarantined, 2 blank quarantined, 4 tigers matched, 2 alerts raised, 6 deliverable files generated. |
-| **Phase 6** | Human Review Acceptance | Flagged detection review, manual reassignment, atomic movement sync, audit logging | **PASSED** | `DET_STN01_...` reassigned from `T-PENCH-001` to `T-999-RC1-VERIFIED`; downstream movement records synchronized. |
-| **Phase 7** | Alert State Machine | Directed state transition graph (`OPEN` $\to$ `ACKNOWLEDGED` $\to$ `RESOLVED`), rejection of illegal transitions | **PASSED** | Illegal transitions (`RESOLVED` $\to$ `ACKNOWLEDGED`, invalid states) strictly raise `ValueError`. |
-| **Phase 8** | Persistence / Restart | Cold process kill and restart; 100% state durability from disk | **PASSED** | SQLite state preserved identically after process destruction and reload. |
-| **Phase 9** | Cross-Platform Paths | Path spaces, Unicode (`पेंच / वाघ`), path traversal security check | **PASSED** | `validate_contained_path` safely authorized space/Unicode paths; blocked `../../etc/passwd` with `PermissionError`. |
-| **Phase 10** | Test Inventory Reconciliation | 100% automated pass rate across all unit, acceptance, and pipeline tests | **PASSED** | **24/24 tests passing (100% pass rate)**. |
+| Area / Scope | Verification Target | Status | Evidence / Notes |
+|---|---|:---:|---|
+| **Backend AI Pipeline** | Multi-stage triage, MegaDescriptor Re-ID, GIS | ✅ Verified | 7-stage deterministic execution, evidence preservation. |
+| **SQLite Persistence** | Local ACID storage, migrations, restarts | ✅ Verified | 100% database durability across process kill/restarts. |
+| **SD-Card Ingestion** | Pre-scan integrity check, folder/SD adapter | ✅ Verified | Corrupt/blank triage, EXIF parsing, SSE progress. |
+| **Human-in-the-Loop** | Ambiguous match triage, reassignment | ✅ Verified | Authoritative officer validation with immutable audit log. |
+| **Alert Lifecycle** | Proximity breaches, centroid shift, absence | ✅ Verified | Directed state machine (`OPEN` $\to$ `ACK` $\to$ `RESOLVED`). |
+| **Offline Execution** | Zero internet, local weights, no cloud | ✅ Verified | `HF_HUB_OFFLINE=1`, embedded model weights. |
+| **Path Security** | Traversal security, spaces, Unicode | ✅ Verified | `validate_contained_path` blocks unauthorized traversal. |
+| **macOS Apple Silicon App** | Standalone `.app` bundle | ✅ Built & Run | Native Rust Tauri v2 + 640 MB PyInstaller sidecar. |
+| **macOS Apple Silicon DMG** | Installable `.dmg` disk image | ✅ Built | `dist/TIGERTRACK_AI_3.2.0_macOS_arm64.dmg` (647 MB). |
+| **Automated Tests** | Unit, integration & acceptance suites | ✅ 24/24 Passed | 100% pass rate in 44.97s. |
+| **UX & Information Architecture** | 5 core destinations + calm layout | ✅ Redesigned | Clean progressive disclosure for forest staff. |
+| **Windows Executable (`.exe`)** | Standalone PyInstaller + Tauri NSIS | ⚠️ Scripted / CI | `scripts/package_desktop.bat` & `.github/workflows/desktop-release.yml`. |
+| **Windows Physical Runtime** | Fresh Windows machine cold test | ⚠️ Pending Host | Needs physical Windows runner to execute installer. |
+| **macOS Intel (`x86_64`)** | Intel Mac bundle & DMG | ⚠️ CI Matrix | Configured in GitHub Actions `macos-13` builder. |
+| **Code Signing & Notarization** | Apple Developer ID / Windows Authenticode | ⚠️ Pending Certs | Self-contained unsigned release candidate. |
 
 ---
 
@@ -36,17 +41,10 @@
 | `frontend/src-tauri/binaries/tiger-intelligence-sidecar-aarch64-apple-darwin` | Standalone PyInstaller Mach-O Binary | 640 MB | `3fab98f01afa9efab94fe6ac17dc2300c7cde3d383216fe3e0b1f4d6409d5c45` |
 | `frontend/src-tauri/target/release/tigertrack-ai-desktop` | Native Rust Tauri Executable | 13 MB | Compiled native client |
 
-### Windows Build Status
-**WINDOWS BUILD NOT EXECUTED ON CURRENT HOST** (Build environment is Darwin arm64 / Apple Silicon).  
-The cross-platform packaging automation is pre-configured in `scripts/package_desktop.bat`. To compile on Windows x64:
-```cmd
-cd tiger-intelligence
-pyinstaller pyinstaller.spec --distpath dist
-copy dist\tiger-intelligence-sidecar.exe ..\frontend\src-tauri\binaries\tiger-intelligence-sidecar-x86_64-pc-windows-msvc.exe
-cd ..\frontend
-npm run build
-npm run tauri build
-```
+### Windows Build Configuration & CI Pipeline
+The Windows build is pre-configured and reproducible via:
+1. **Local Build Script**: `scripts/package_desktop.bat` for running on a native Windows machine with Python and Node.js.
+2. **GitHub Actions Matrix**: `.github/workflows/desktop-release.yml` for automated cloud compilation on `windows-latest` runners to generate `TIGERTRACK_AI_Windows_x64.exe` (NSIS) and `.msi` installers.
 
 ---
 

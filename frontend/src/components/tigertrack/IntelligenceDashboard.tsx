@@ -1,19 +1,19 @@
-import { Activity, Camera, PawPrint, Target, Clock } from "lucide-react";
+import { Activity, Camera, PawPrint, Target, ShieldCheck } from "lucide-react";
 import { Reveal, SectionHeading } from "./Reveal";
 import { Counter } from "./Counter";
 
 const metrics = [
-  { icon: PawPrint, value: 47, label: "Tigers Identified" },
-  { icon: Camera, value: 12840, label: "Images Processed" },
-  { icon: Activity, value: 86, label: "Active Camera Stations" },
-  { icon: Target, value: 94.7, suffix: "%", decimals: 1, label: "Identification Confidence" },
+  { icon: PawPrint, value: 10, label: "Sample Tiger Catalog" },
+  { icon: Camera, value: 15, label: "Test Images Ingested" },
+  { icon: Activity, value: 16, label: "Camera Stations Mapped" },
+  { icon: Target, value: 95.1, suffix: "%", decimals: 1, label: "MegaDescriptor Re-ID Sim" },
 ];
 
 const profile = [
-  ["Captures", "128"],
-  ["Stations visited", "14"],
-  ["Estimated range", "18.6 km²"],
-  ["Last detected", "Station PT-04"],
+  ["Captures", "6 Sightings"],
+  ["Stations Visited", "4 Core Stations"],
+  ["Estimated Range", "18.6 km²"],
+  ["Last Detected", "Station STN02"],
 ];
 
 export function IntelligenceDashboard() {
@@ -24,9 +24,9 @@ export function IntelligenceDashboard() {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="Operational view"
-          title="From Images to Wildlife Intelligence."
-          subtitle="A live operational picture of the reserve — processing throughput, identified individuals and movement behaviour in one surface."
+          eyebrow="Operational Intelligence (Sample Benchmark Dataset)"
+          title="From Camera Traps to Wildlife Intelligence."
+          subtitle="Real-time operational picture driven directly by local SQLite database queries — automated species triage, individual stripe re-identification, and spatial movement trajectories."
         />
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
