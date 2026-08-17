@@ -7,6 +7,12 @@ pretrained MegaDescriptor-T-224 animal re-identification foundation model (BVRA/
 """
 
 import os
+
+# Enforce strict offline operation for all HuggingFace and PyTorch Hub calls
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+
 from typing import List, Optional, Union
 
 import numpy as np

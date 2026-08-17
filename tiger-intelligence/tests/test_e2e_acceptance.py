@@ -146,6 +146,37 @@ class TestEndToEndAcceptance(unittest.TestCase):
         pending_after = db.get_pending_reviews()
         self.assertFalse(any(p["detection_id"] == "DET_E2E_REVIEW" for p in pending_after))
 
+        # Assert movement record was synced for target tiger
+        m_hist = db.get_tiger_movement_history(target_tid)
+        self.assertTrue(any(m["detection_id"] == "DET_E2E_REVIEW" for m in m_hist), "Confirmed sighting must sync to movement records")
+
+        # Officer Reassignment test: Reassign DET_E2E_REVIEW to a different tiger T-PENCH-999 (new tiger)
+        ok_reassign = db.apply_human_correction(
+            detection_id="DET_E2E_REVIEW",
+            human_decision="NEW_TIGER",
+            corrected_tiger_id="T-PENCH-999",
+            actor="OFFICER_PATIL",
+        )
+        self.assertTrue(ok_reassign)
+        new_tiger_m = db.get_tiger_movement_history("T-PENCH-999")
+        self.assertEqual(len(new_tiger_m), 1, "Reassigned sighting must migrate to new tiger movement records")
+        self.assertEqual(new_tiger_m[0]["detection_id"], "DET_E2E_REVIEW")
+
+        # 8b. Alert State Machine Enforcement Test
+        with db._get_connection() as conn:
+            alert_row = conn.execute("SELECT alert_id FROM alerts LIMIT 1").fetchone()
+        if alert_row:
+            test_aid = alert_row["alert_id"]
+            # Legal: OPEN -> ACKNOWLEDGED
+            res_ack = db.update_alert_status(test_aid, "ACKNOWLEDGED", actor="OFFICER_PATIL", notes="Acknowledged")
+            self.assertEqual(res_ack["new_status"], "ACKNOWLEDGED")
+            # Legal: ACKNOWLEDGED -> RESOLVED
+            res_res = db.update_alert_status(test_aid, "RESOLVED", actor="OFFICER_PATIL", notes="Resolved in field")
+            self.assertEqual(res_res["new_status"], "RESOLVED")
+            # Illegal: RESOLVED -> ACKNOWLEDGED (Must fail with ValueError)
+            with self.assertRaises(ValueError):
+                db.update_alert_status(test_aid, "ACKNOWLEDGED", actor="OFFICER_PATIL", notes="Illegal transition")
+
         # 9. Prolonged Absence Test
         # Build 3 historical sightings for the tiger with 5-day intervals
         t_target = all_tigers[0]["tiger_id"]

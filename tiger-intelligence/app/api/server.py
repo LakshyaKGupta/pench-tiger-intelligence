@@ -1,7 +1,12 @@
+import os
+# Enforce strict offline operation for all Hugging Face and PyTorch model loading
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+
 import asyncio
 import json
 import mimetypes
-import os
 import sys
 import threading
 import time
@@ -704,7 +709,10 @@ def get_alerts(
 @app.post("/api/alerts/{alert_id}/acknowledge")
 def acknowledge_alert(alert_id: str, req: AlertActionRequest):
     """Mark an alert as acknowledged by an officer."""
-    res = db.update_alert_status(alert_id, "ACKNOWLEDGED", actor=req.actor, notes=req.notes)
+    try:
+        res = db.update_alert_status(alert_id, "ACKNOWLEDGED", actor=req.actor, notes=req.notes)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not res:
         raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
     return {"status": "SUCCESS", "alert": res}
@@ -713,7 +721,10 @@ def acknowledge_alert(alert_id: str, req: AlertActionRequest):
 @app.post("/api/alerts/{alert_id}/resolve")
 def resolve_alert(alert_id: str, req: AlertActionRequest):
     """Resolve an alert with mandatory justification note."""
-    res = db.update_alert_status(alert_id, "RESOLVED", actor=req.actor, notes=req.notes)
+    try:
+        res = db.update_alert_status(alert_id, "RESOLVED", actor=req.actor, notes=req.notes)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not res:
         raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
     return {"status": "SUCCESS", "alert": res}
@@ -722,7 +733,10 @@ def resolve_alert(alert_id: str, req: AlertActionRequest):
 @app.post("/api/alerts/{alert_id}/false-positive")
 def mark_false_positive(alert_id: str, req: AlertActionRequest):
     """Mark an alert as a false positive with mandatory explanation."""
-    res = db.update_alert_status(alert_id, "FALSE_POSITIVE", actor=req.actor, notes=req.notes)
+    try:
+        res = db.update_alert_status(alert_id, "FALSE_POSITIVE", actor=req.actor, notes=req.notes)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not res:
         raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
     return {"status": "SUCCESS", "alert": res}
@@ -731,7 +745,10 @@ def mark_false_positive(alert_id: str, req: AlertActionRequest):
 @app.post("/api/alerts/{alert_id}/suppress")
 def suppress_alert(alert_id: str, req: AlertActionRequest):
     """Suppress an alert due to survey-effort or sensor calibration."""
-    res = db.update_alert_status(alert_id, "SUPPRESSED", actor=req.actor, notes=req.notes)
+    try:
+        res = db.update_alert_status(alert_id, "SUPPRESSED", actor=req.actor, notes=req.notes)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not res:
         raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
     return {"status": "SUCCESS", "alert": res}
@@ -740,7 +757,10 @@ def suppress_alert(alert_id: str, req: AlertActionRequest):
 @app.post("/api/alerts/{alert_id}/dismiss")
 def dismiss_alert(alert_id: str):
     """Acknowledge and dismiss an operational alert."""
-    res = db.update_alert_status(alert_id, "RESOLVED", actor="OFFICER_PATIL", notes="Dismissed via quick action")
+    try:
+        res = db.update_alert_status(alert_id, "RESOLVED", actor="OFFICER_PATIL", notes="Dismissed via quick action")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not res:
         raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
     return {"status": "success", "alert_id": alert_id, "is_dismissed": 1}

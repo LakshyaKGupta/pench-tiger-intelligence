@@ -27,6 +27,7 @@ export const Route = createFileRoute("/dashboard/")({
 function CommandCenter() {
   const [data, setData] = useState<OverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     intelligenceService
@@ -36,20 +37,21 @@ function CommandCenter() {
         setLoading(false);
       })
       .catch((err) => {
-        console.warn("API offline, rendering fallback command center state:", err);
+        console.error("Failed to load overview data from local engine:", err);
+        setError("Unable to connect to local intelligence service.");
         setLoading(false);
       });
   }, []);
 
   const kpis = data?.kpis || {
-    total_tigers: 6,
-    active_camera_stations: 9,
-    total_detections: 6,
-    images_processed: 7,
-    quarantined_images: 1,
+    total_tigers: 0,
+    active_camera_stations: 0,
+    total_detections: 0,
+    images_processed: 0,
+    quarantined_images: 0,
     images_awaiting_review: 0,
-    active_alerts_count: 2,
-    identification_confidence: 89.3,
+    active_critical_alerts: 0,
+    triage_efficiency_percent: 0,
   };
 
   const recentSightings = data?.recent_sightings || [];

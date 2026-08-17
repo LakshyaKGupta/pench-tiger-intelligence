@@ -53,7 +53,7 @@ function DetectionCenterPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.warn("API offline, using cached fallback detections:", err);
+        console.error("Failed to fetch detections:", err);
         setLoading(false);
       });
   };

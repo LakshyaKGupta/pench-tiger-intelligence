@@ -44,7 +44,7 @@ function CameraStationsPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.warn("API offline, using fallback stations:", err);
+        console.error("Failed to load camera stations:", err);
         setLoading(false);
       });
   }, []);

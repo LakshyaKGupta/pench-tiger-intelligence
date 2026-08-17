@@ -41,7 +41,7 @@ function TigerCatalogPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.warn("API offline, using fallback tigers:", err);
+        console.error("Failed to load tiger catalog:", err);
         setLoading(false);
       });
   }, []);

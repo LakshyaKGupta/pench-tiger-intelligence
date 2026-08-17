@@ -424,6 +424,29 @@ class TigerDatabase:
                 )
             )
 
+    def get_active_alerts(self, tiger_id: Optional[str] = None) -> List[dict]:
+        """Retrieve all non-dismissed / active operational alerts."""
+        with self._get_connection() as conn:
+            if tiger_id:
+                rows = conn.execute(
+                    "SELECT * FROM alerts WHERE tiger_id = ? AND is_dismissed = 0 ORDER BY timestamp DESC",
+                    (tiger_id,),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM alerts WHERE is_dismissed = 0 ORDER BY timestamp DESC"
+                ).fetchall()
+            alerts = []
+            for r in rows:
+                d = dict(r)
+                if "evidence_data" in d and isinstance(d["evidence_data"], str):
+                    try:
+                        d["evidence_data"] = json.loads(d["evidence_data"])
+                    except Exception:
+                        pass
+                alerts.append(d)
+            return alerts
+
     def update_alert_status(
         self,
         alert_id: str,
@@ -433,7 +456,10 @@ class TigerDatabase:
     ) -> Optional[dict]:
         """
         Transition an alert to OPEN, ACKNOWLEDGED, RESOLVED, FALSE_POSITIVE, or SUPPRESSED.
-        Preserves original alert evidence and appends a forensic audit log.
+        Strictly enforces the legal directed state transition graph:
+          OPEN -> ACKNOWLEDGED, RESOLVED, FALSE_POSITIVE, SUPPRESSED
+          ACKNOWLEDGED -> RESOLVED, FALSE_POSITIVE, SUPPRESSED, OPEN
+          RESOLVED / FALSE_POSITIVE / SUPPRESSED -> OPEN (explicit reopen only)
         """
         valid_statuses = {"OPEN", "ACKNOWLEDGED", "RESOLVED", "FALSE_POSITIVE", "SUPPRESSED"}
         if new_status not in valid_statuses:
@@ -447,6 +473,20 @@ class TigerDatabase:
             if not row:
                 return None
             prev_status = row["status"] if "status" in row.keys() and row["status"] else "OPEN"
+
+            # Legal transition graph validation
+            legal_transitions = {
+                "OPEN": {"ACKNOWLEDGED", "RESOLVED", "FALSE_POSITIVE", "SUPPRESSED", "OPEN"},
+                "ACKNOWLEDGED": {"RESOLVED", "FALSE_POSITIVE", "SUPPRESSED", "OPEN", "ACKNOWLEDGED"},
+                "RESOLVED": {"OPEN", "RESOLVED"},
+                "FALSE_POSITIVE": {"OPEN", "FALSE_POSITIVE"},
+                "SUPPRESSED": {"OPEN", "SUPPRESSED"},
+            }
+            if new_status not in legal_transitions.get(prev_status, {"OPEN"}):
+                raise ValueError(
+                    f"Illegal alert state transition: Cannot transition from '{prev_status}' to '{new_status}'. "
+                    f"Terminal alerts must be reopened to 'OPEN' first."
+                )
 
             conn.execute("""
                 UPDATE alerts SET
@@ -478,6 +518,46 @@ class TigerDatabase:
             "notes": notes,
             "timestamp": timestamp,
         }
+
+    def sync_tiger_spatial_metrics(self, tiger_id: str):
+        """
+        Recalculate total sightings, last seen, home range centroid and MCP area
+        for a given tiger directly from authoritative movement_records.
+        """
+        from app.occupancy.mcp import calculate_tiger_home_range
+        history = self.get_tiger_movement_history(tiger_id)
+        if not history:
+            with self._get_connection() as conn:
+                conn.execute(
+                    "UPDATE tigers SET total_sightings = 0, home_range_area_km2 = 0.0 WHERE tiger_id = ?",
+                    (tiger_id,)
+                )
+            return
+
+        occ = calculate_tiger_home_range(history)
+        last_seen = history[-1]["timestamp"]
+        total_sightings = len(history)
+
+        with self._get_connection() as conn:
+            conn.execute(
+                """
+                UPDATE tigers SET
+                    current_centroid_lat = ?,
+                    current_centroid_lon = ?,
+                    home_range_area_km2 = ?,
+                    last_seen = ?,
+                    total_sightings = ?
+                WHERE tiger_id = ?
+                """,
+                (
+                    occ.get("centroid_lat"),
+                    occ.get("centroid_lon"),
+                    occ.get("home_range_km2", 0.0),
+                    last_seen,
+                    total_sightings,
+                    tiger_id,
+                )
+            )
 
     # ── Ingestion Pipeline Runs ────────────────────────────────────────────────
 
@@ -561,31 +641,27 @@ class TigerDatabase:
         actor: str = "OFFICER",
     ) -> bool:
         """
-        Persist a human review decision for a detection.
-
-        Stores:
-          - original_reid_tiger_id  (snapshotted from current reid_matched_tiger_id on first call)
-          - original_reid_similarity
-          - original_reid_confidence_level
-          - human_decision
-          - human_actor
-          - human_timestamp
-          - verified_tiger_id (the authoritative final identity)
-          - human_verified = 1
-
-        The original AI prediction is NEVER overwritten — only the human_* and verified_tiger_id
-        columns are updated.
+        Persist a human review decision for a detection and atomically update downstream movement records.
         """
         with self._get_connection() as conn:
             row = conn.execute(
-                "SELECT reid_matched_tiger_id, reid_similarity, reid_confidence_level "
-                "FROM detections WHERE detection_id = ?",
+                "SELECT d.*, c.latitude, c.longitude FROM detections d "
+                "LEFT JOIN camera_stations c ON d.station_id = c.station_id "
+                "WHERE d.detection_id = ?",
                 (detection_id,)
             ).fetchone()
             if row is None:
                 return False
 
-            # Snapshot original AI prediction the first time a human reviews this record
+            det = dict(row)
+            orig_tiger_id = det.get("original_reid_tiger_id") or det.get("reid_matched_tiger_id")
+            final_tiger_id = corrected_tiger_id if human_decision in ("CONFIRMED", "REASSIGNED", "NEW_TIGER") else None
+            if human_decision == "CONFIRMED" and not final_tiger_id:
+                final_tiger_id = orig_tiger_id
+
+            timestamp = datetime.now().isoformat()
+
+            # 1. Update detections row
             conn.execute(
                 """
                 UPDATE detections SET
@@ -602,12 +678,61 @@ class TigerDatabase:
                 (
                     human_decision,
                     actor,
-                    datetime.now().isoformat(),
-                    corrected_tiger_id,
+                    timestamp,
+                    final_tiger_id,
                     detection_id,
                 )
             )
 
+            # 2. If NEW_TIGER, register in tigers table if not exists
+            if human_decision == "NEW_TIGER" and final_tiger_id:
+                conn.execute(
+                    """
+                    INSERT INTO tigers (tiger_id, name, status, first_seen, last_seen, total_sightings)
+                    VALUES (?, ?, 'RESIDENT', ?, ?, 0)
+                    ON CONFLICT(tiger_id) DO NOTHING
+                    """,
+                    (final_tiger_id, final_tiger_id, det.get("timestamp", timestamp), det.get("timestamp", timestamp))
+                )
+
+            # 3. Synchronize movement_records
+            if human_decision in ("CONFIRMED", "REASSIGNED", "NEW_TIGER") and final_tiger_id:
+                mv_row = conn.execute("SELECT record_id FROM movement_records WHERE detection_id = ?", (detection_id,)).fetchone()
+                if mv_row:
+                    conn.execute(
+                        "UPDATE movement_records SET tiger_id = ? WHERE detection_id = ?",
+                        (final_tiger_id, detection_id)
+                    )
+                else:
+                    stn_lat = det.get("latitude") or 21.75
+                    stn_lon = det.get("longitude") or 79.30
+                    conn.execute(
+                        """
+                        INSERT INTO movement_records (
+                            tiger_id, detection_id, station_id, timestamp, latitude, longitude
+                        ) VALUES (?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(tiger_id, detection_id) DO UPDATE SET
+                            tiger_id=excluded.tiger_id
+                        """,
+                        (
+                            final_tiger_id,
+                            detection_id,
+                            det.get("station_id", "STN01"),
+                            det.get("timestamp", timestamp),
+                            stn_lat,
+                            stn_lon,
+                        )
+                    )
+            elif human_decision == "REJECTED":
+                conn.execute("DELETE FROM movement_records WHERE detection_id = ?", (detection_id,))
+
+        # 4. Recalculate spatial metrics for affected tigers
+        if orig_tiger_id:
+            self.sync_tiger_spatial_metrics(orig_tiger_id)
+        if final_tiger_id and final_tiger_id != orig_tiger_id:
+            self.sync_tiger_spatial_metrics(final_tiger_id)
+
+        # 5. Log audit trail
         self.log_audit(
             entity_type="detection",
             entity_id=detection_id,
@@ -615,8 +740,9 @@ class TigerDatabase:
             actor=actor,
             details=json.dumps({
                 "human_decision": human_decision,
-                "corrected_tiger_id": corrected_tiger_id,
-                "original_tiger_id": dict(row)["reid_matched_tiger_id"] if row else None,
+                "corrected_tiger_id": final_tiger_id,
+                "original_tiger_id": orig_tiger_id,
+                "timestamp": timestamp,
             }),
         )
         return True

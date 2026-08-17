@@ -21,6 +21,7 @@ export const Route = createFileRoute("/dashboard/analytics")({
 function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     intelligenceService
@@ -30,25 +31,15 @@ function AnalyticsPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.warn("API offline, using cached analytics fallback:", err);
+        console.error("Failed to load analytics:", err);
+        setError("Unable to connect to local intelligence service.");
         setLoading(false);
       });
   }, []);
 
-  const species = data?.species_distribution || [
-    { species: "tiger", count: 6 },
-    { species: "leopard", count: 2 },
-    { species: "chital", count: 14 },
-    { species: "human", count: 1 },
-  ];
-
-  const totalSpeciesCaptures = species.reduce((a, b) => a + b.count, 0) || 1;
-
-  const reidDist = data?.reid_confidence_distribution || [
-    { reid_confidence_level: "HIGH", count: 5 },
-    { reid_confidence_level: "MEDIUM_REVIEW_REQUIRED", count: 1 },
-  ];
-
+  const species = data?.species_distribution || [];
+  const totalSpeciesCaptures = species.reduce((a, b) => a + b.count, 0);
+  const reidDist = data?.reid_confidence_distribution || [];
   const topStations = data?.top_stations || [];
   const topTigers = data?.top_tigers || [];
 

@@ -350,19 +350,29 @@ function WildlifeGISMapPage() {
             <div className="mt-3 space-y-1.5 text-xs">
               {selectedFeature.type === "Station" && (
                 <>
-                  <p className="font-mono font-bold text-foreground">
-                    Station: {selectedFeature.station_id} ({selectedFeature.zone})
-                  </p>
-                  <p className="text-muted-foreground">
-                    Coordinates: {selectedFeature.latitude?.toFixed(4)},{" "}
-                    {selectedFeature.longitude?.toFixed(4)}
-                  </p>
-                  <p className="text-muted-foreground">
-                    Distance to Village: {selectedFeature.distance_to_village_km?.toFixed(1) || 5.0} km
-                  </p>
-                  <p className="text-muted-foreground">
-                    Total Detections: {selectedFeature.total_detections || 0}
-                  </p>
+                  <div className="space-y-1 rounded-sm bg-secondary/50 p-2.5">
+                    <p className="font-mono font-bold text-foreground">
+                      Station: {selectedFeature.station_id} ({selectedFeature.zone || "Core"})
+                    </p>
+                    <p className="text-muted-foreground">
+                      Coordinates: {selectedFeature.latitude?.toFixed(4)},{" "}
+                      {selectedFeature.longitude?.toFixed(4)}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Distance to Village: {selectedFeature.distance_to_village_km?.toFixed(1) || 5.0} km
+                    </p>
+                    <p className="text-muted-foreground">
+                      Total Sighting Events: {selectedFeature.total_detections || 0}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Distinct Tigers Recorded: {selectedFeature.distinct_tigers_recorded || 0}
+                    </p>
+                  </div>
+                  {selectedFeature.last_activity && (
+                    <p className="text-[11px] text-primary">
+                      Last Sighting: {new Date(selectedFeature.last_activity).toLocaleString()}
+                    </p>
+                  )}
                 </>
               )}
 

@@ -3,11 +3,16 @@ pipeline.py — Master Camera Trap Ingestion & Tiger Movement Intelligence Orche
 Pench Tiger Reserve — Forest Officer Automated Local Pipeline (100% Offline)
 """
 
+import os
+# Enforce strict offline operation for all models
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+
 import argparse
 import csv
 import hashlib
 import json
-import os
 import shutil
 import sys
 import time
