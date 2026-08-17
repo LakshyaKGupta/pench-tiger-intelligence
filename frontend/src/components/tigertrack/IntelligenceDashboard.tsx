@@ -1,4 +1,4 @@
-import { Activity, Camera, PawPrint, Target, ShieldCheck } from "lucide-react";
+import { Activity, Camera, PawPrint, Target, ShieldCheck, Clock } from "lucide-react";
 import { Reveal, SectionHeading } from "./Reveal";
 import { Counter } from "./Counter";
 
