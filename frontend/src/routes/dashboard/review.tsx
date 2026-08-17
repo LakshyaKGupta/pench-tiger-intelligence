@@ -6,13 +6,10 @@ import {
   XCircle,
   UserPlus,
   RefreshCw,
-  ArrowRight,
-  ShieldCheck,
-  Eye,
-  AlertCircle,
   PawPrint,
-  Sliders,
+  ChevronDown,
   Sparkles,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { intelligenceService } from "@/lib/services";
@@ -29,6 +26,7 @@ function HumanReviewQueuePage() {
   const [loading, setLoading] = useState(true);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [reassignMap, setReassignMap] = useState<Record<string, string>>({});
+  const [expandedTechId, setExpandedTechId] = useState<string | null>(null);
 
   const loadQueue = async () => {
     setLoading(true);
@@ -65,9 +63,7 @@ function HumanReviewQueuePage() {
         `Human officer verified decision: ${decision}`
       );
 
-      toast.success(res.message || `Decision ${decision} recorded in SQLite database.`);
-
-      // Remove from active review queue
+      toast.success(res.message || `Decision recorded in local database.`);
       setReviewItems((prev) => prev.filter((item) => item.detection_id !== detectionId));
     } catch (err: any) {
       toast.error(err.message || "Failed to persist human verification decision.");
@@ -77,229 +73,196 @@ function HumanReviewQueuePage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header & Policy Callout */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6 max-w-4xl mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/50 pb-5">
         <div>
-          <h1 className="font-display text-xl font-bold text-foreground">
-            Human-in-the-Loop Verification Queue
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+            Human Review Queue
           </h1>
-          <p className="data-chip text-muted-foreground">
-            Ambiguous stripe matches staged for officer inspection and authoritative validation
+          <p className="mt-1 text-xs text-muted-foreground">
+            Authoritative officer validation for ambiguous or novel stripe patterns
           </p>
         </div>
 
         <button
           onClick={loadQueue}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-sm border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md border border-border/60 bg-secondary/40 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary transition-colors self-start sm:self-center"
         >
           <RefreshCw className={`size-3.5 ${loading ? "animate-spin text-primary" : ""}`} />
-          Refresh Queue
+          Refresh
         </button>
       </div>
 
-      {/* Review Band Policy Banner */}
-      <div className="panel rounded-sm border-amber/40 bg-amber/5 p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="size-5 shrink-0 text-amber mt-0.5" />
-          <div className="text-xs">
-            <span className="font-bold text-foreground">Review Policy Invariant:</span>
-            <p className="mt-1 leading-relaxed text-muted-foreground">
-              Detections in the medium-confidence similarity interval ([45%, 65%)) are quarantined
-              from automated classification and require officer confirmation. Human decisions
-              immediately update <span className="font-mono text-foreground">tiger.db</span>,
-              recompute movement trajectories, and append an immutable entry to the forensic audit
-              trail.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Review Cards List */}
-      <div className="space-y-6">
-        {loading ? (
-          <div className="py-20 text-center text-sm text-muted-foreground">
-            Checking for pending ambiguous detections...
-          </div>
-        ) : reviewItems.length === 0 ? (
-          <div className="panel flex flex-col items-center justify-center py-16 text-center rounded-sm">
-            <CheckCircle2 className="size-12 text-signal opacity-80" />
-            <h3 className="mt-4 font-display text-base font-semibold text-foreground">
-              Review Queue Clean
-            </h3>
-            <p className="mt-1 max-w-md text-xs text-muted-foreground">
-              There are currently no ambiguous tiger detections requiring human confirmation. All
-              captured frames have been resolved or triaged.
-            </p>
-          </div>
-        ) : (
-          reviewItems.map((item) => {
+      {loading ? (
+        <div className="py-24 text-center text-xs text-muted-foreground">
+          Checking for pending review items...
+        </div>
+      ) : reviewItems.length === 0 ? (
+        <div className="calm-card rounded-lg p-12 text-center space-y-3">
+          <CheckCircle2 className="size-8 text-signal mx-auto" />
+          <h3 className="font-display text-sm font-semibold text-foreground">
+            Review Queue Clean
+          </h3>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            There are currently no ambiguous detections requiring manual confirmation. All captures have been categorized with high confidence.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {reviewItems.map((item) => {
             const candidateId = item.reid_matched_tiger_id || "Unassigned";
             const candidateTiger = tigers.find((t) => t.tiger_id === candidateId);
             const similarity = item.reid_similarity
               ? Math.round(item.reid_similarity * 100)
-              : 52;
+              : Math.round(item.species_confidence * 100);
             const isSubmitting = submittingId === item.detection_id;
+            const isTechOpen = expandedTechId === item.detection_id;
 
             return (
-              <div
-                key={item.detection_id}
-                className="panel rounded-sm p-6 space-y-5 border-border transition-all hover:border-primary/50"
-              >
-                {/* Card Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-8 place-items-center rounded-sm bg-amber/20 text-amber">
-                      <PawPrint className="size-4" />
+              <div key={item.detection_id} className="calm-card rounded-lg p-6 space-y-6">
+                {/* Photo & Candidate Comparison Grid */}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* Unverified Crop */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-semibold text-foreground block">
+                      Captured Field Detection
                     </span>
-                    <div>
-                      <h3 className="font-mono text-sm font-bold text-foreground">
-                        Detection: {item.detection_id}
-                      </h3>
-                      <p className="font-mono text-xs text-muted-foreground">
-                        Station: {item.station_id} · Timestamp: {item.timestamp}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="data-chip rounded-sm border border-amber/40 bg-amber/15 px-2.5 py-1 text-xs font-bold text-amber">
-                      {similarity}% Similarity (Ambiguous Band)
-                    </span>
-                  </div>
-                </div>
-
-                {/* Side-by-Side Comparison */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Left: Query Crop */}
-                  <div className="rounded-sm border border-border bg-black/40 p-3">
-                    <div className="flex items-center justify-between pb-2">
-                      <span className="data-chip font-semibold text-primary">
-                        1. Query Detection Crop
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        Station {item.station_id}
-                      </span>
-                    </div>
-                    <div className="aspect-[16/10] w-full overflow-hidden rounded-sm bg-black">
+                    <div className="aspect-[16/10] w-full rounded-md overflow-hidden bg-black/40 border border-border/50">
                       {item.crop_path ? (
                         <img
                           src={api.getImageUrl(item.crop_path)}
-                          alt="Query crop"
-                          className="size-full object-contain"
+                          alt="Unverified candidate"
+                          className="size-full object-cover"
                         />
                       ) : (
-                        <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
-                          No query crop
+                        <div className="flex size-full items-center justify-center text-muted-foreground">
+                          <PawPrint className="size-8 text-primary/30" />
                         </div>
                       )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground font-mono">
+                      Station: {item.station_id || "STN"} · Time: {item.timestamp || "Recent"}
                     </div>
                   </div>
 
-                  {/* Right: Candidate Reference Crop */}
-                  <div className="rounded-sm border border-border bg-black/40 p-3">
-                    <div className="flex items-center justify-between pb-2">
-                      <span className="data-chip font-semibold text-signal">
-                        2. Reference Match: {candidateId}
+                  {/* Candidate Tiger Reference */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">
+                        Possible Match: <strong className="text-primary">{candidateId}</strong>
                       </span>
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        Gallery Baseline
+                      <span className="rounded bg-amber/15 px-2 py-0.2 text-[11px] font-bold text-amber border border-amber/30">
+                        {similarity}% Confidence
                       </span>
                     </div>
-                    <div className="aspect-[16/10] w-full overflow-hidden rounded-sm bg-black">
+
+                    <div className="aspect-[16/10] w-full rounded-md overflow-hidden bg-black/40 border border-border/50">
                       {candidateTiger?.reference_image_path ? (
                         <img
                           src={api.getImageUrl(candidateTiger.reference_image_path)}
-                          alt="Reference crop"
-                          className="size-full object-contain"
+                          alt={candidateTiger.name}
+                          className="size-full object-cover"
                         />
                       ) : (
-                        <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
-                          No reference image available
+                        <div className="flex size-full items-center justify-center text-muted-foreground">
+                          <PawPrint className="size-8 text-primary/30" />
                         </div>
                       )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground font-mono">
+                      Reference Gallery: {candidateTiger?.name || candidateId}
                     </div>
                   </div>
                 </div>
 
-                {/* Officer Action Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground">
-                      Reassign Tiger:
-                    </span>
+                {/* Primary Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/30">
+                  <button
+                    onClick={() => handleDecision(item.detection_id, "CONFIRMED", candidateId)}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-1.5 rounded-md btn-amber px-4 py-2 text-xs font-semibold shadow-xs disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="size-3.5" />
+                    <span>Confirm Match ({candidateId})</span>
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
                     <select
-                      value={reassignMap[item.detection_id] || candidateId}
+                      value={reassignMap[item.detection_id] || ""}
                       onChange={(e) =>
                         setReassignMap((prev) => ({
                           ...prev,
                           [item.detection_id]: e.target.value,
                         }))
                       }
-                      className="h-8 rounded-sm border border-border bg-secondary px-2 text-xs text-foreground focus:border-primary focus:outline-none font-mono"
+                      className="h-8.5 rounded-md border border-border/70 bg-secondary/40 px-2.5 text-xs text-foreground focus:border-primary focus:outline-none"
                     >
-                      {tigers.map((t) => (
-                        <option key={t.tiger_id} value={t.tiger_id}>
-                          {t.tiger_id} ({t.name})
-                        </option>
-                      ))}
+                      <option value="">Reassign to...</option>
+                      {tigers
+                        .filter((t) => t.tiger_id !== candidateId)
+                        .map((t) => (
+                          <option key={t.tiger_id} value={t.tiger_id}>
+                            {t.tiger_id} ({t.name})
+                          </option>
+                        ))}
                     </select>
+
                     <button
-                      onClick={() =>
-                        handleDecision(
-                          item.detection_id,
-                          "REASSIGNED",
-                          reassignMap[item.detection_id] || candidateId
-                        )
-                      }
-                      disabled={isSubmitting}
-                      className="rounded-sm border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 disabled:opacity-50"
+                      onClick={() => {
+                        const targetTiger = reassignMap[item.detection_id];
+                        if (!targetTiger) {
+                          toast.error("Please select a target tiger from dropdown.");
+                          return;
+                        }
+                        handleDecision(item.detection_id, "REASSIGNED", targetTiger);
+                      }}
+                      disabled={isSubmitting || !reassignMap[item.detection_id]}
+                      className="rounded-md border border-border/60 bg-secondary/60 hover:bg-secondary px-3 py-1.5 text-xs font-medium text-foreground transition-colors disabled:opacity-50"
                     >
                       Reassign
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() =>
-                        handleDecision(item.detection_id, "NEW_TIGER")
-                      }
-                      disabled={isSubmitting}
-                      className="flex items-center gap-1.5 rounded-sm border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-50"
-                    >
-                      <UserPlus className="size-3.5 text-primary" />
-                      Register New Tiger
-                    </button>
+                  <button
+                    onClick={() => handleDecision(item.detection_id, "REJECTED")}
+                    disabled={isSubmitting}
+                    className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors ml-auto"
+                  >
+                    Not a Tiger
+                  </button>
+                </div>
 
-                    <button
-                      onClick={() =>
-                        handleDecision(item.detection_id, "REJECTED")
-                      }
-                      disabled={isSubmitting}
-                      className="flex items-center gap-1.5 rounded-sm border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-50"
-                    >
-                      <XCircle className="size-3.5" />
-                      Reject Match
-                    </button>
+                {/* Expandable Technical Details */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedTechId(isTechOpen ? null : item.detection_id)
+                    }
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  >
+                    <Layers className="size-3" />
+                    <span>{isTechOpen ? "Hide technical evidence" : "Technical confidence breakdown"}</span>
+                    <ChevronDown className={`size-3 transition-transform ${isTechOpen ? "rotate-180" : ""}`} />
+                  </button>
 
-                    <button
-                      onClick={() =>
-                        handleDecision(item.detection_id, "CONFIRMED", candidateId)
-                      }
-                      disabled={isSubmitting}
-                      className="flex items-center gap-1.5 rounded-sm btn-amber px-4 py-1.5 text-xs font-semibold disabled:opacity-50"
-                    >
-                      <CheckCircle2 className="size-3.5" />
-                      Confirm Match ({candidateId})
-                    </button>
-                  </div>
+                  {isTechOpen && (
+                    <div className="mt-2 p-3 rounded-md bg-black/20 border border-border/40 font-mono text-xs text-muted-foreground space-y-1">
+                      <div>Detection ID: {item.detection_id}</div>
+                      <div>Species Confidence: {Math.round(item.species_confidence * 100)}%</div>
+                      <div>MegaDescriptor Cosine Distance: {item.reid_similarity?.toFixed(4) || "N/A"}</div>
+                      <div>Triage Status: Human Review Required ([0.08, 0.15) band)</div>
+                    </div>
+                  )}
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }

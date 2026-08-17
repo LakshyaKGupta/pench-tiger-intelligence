@@ -3,17 +3,15 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   AlertCircle,
-  ShieldAlert,
-  Search,
-  Filter,
   CheckCircle2,
   Clock,
   Radio,
   PawPrint,
-  Compass,
-  ArrowRight,
-  Eye,
   X,
+  ChevronDown,
+  Info,
+  Check,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { intelligenceService } from "@/lib/services";
@@ -26,24 +24,19 @@ export const Route = createFileRoute("/dashboard/alerts")({
 function AlertCenterPage() {
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [severityFilter, setSeverityFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedAlert, setSelectedAlert] = useState<AlertRecord | null>(null);
+  const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
+
+  // Action dialog state
   const [actionAlert, setActionAlert] = useState<AlertRecord | null>(null);
-  const [actionType, setActionType] = useState<"ACKNOWLEDGE" | "RESOLVE" | "FALSE_POSITIVE" | "SUPPRESS">("ACKNOWLEDGE");
-  const [officerActor, setOfficerActor] = useState("OFFICER_PATIL");
+  const [actionType, setActionType] = useState<"ACKNOWLEDGE" | "RESOLVE" | "FALSE_POSITIVE">("ACKNOWLEDGE");
   const [actionNote, setActionNote] = useState("");
   const [actionSubmitting, setActionSubmitting] = useState(false);
 
   const fetchAlerts = () => {
     setLoading(true);
     intelligenceService
-      .getAlerts({
-        severity: severityFilter === "all" ? undefined : severityFilter,
-        alert_type: typeFilter === "all" ? undefined : typeFilter,
-        active_only: false,
-      })
+      .getAlerts({ active_only: false })
       .then((res) => {
         setAlerts(res);
         setLoading(false);
@@ -56,29 +49,26 @@ function AlertCenterPage() {
 
   useEffect(() => {
     fetchAlerts();
-  }, [severityFilter, typeFilter]);
+  }, []);
 
   const handleExecuteAction = async () => {
     if (!actionAlert) return;
     if (!actionNote.trim()) {
-      toast.error("Please enter an officer justification note for the audit trail.");
+      toast.error("Please enter an officer note for the audit log.");
       return;
     }
 
     setActionSubmitting(true);
     try {
       if (actionType === "ACKNOWLEDGE") {
-        await intelligenceService.acknowledgeAlert(actionAlert.alert_id, officerActor, actionNote);
-        toast.success(`Alert ${actionAlert.alert_id} acknowledged.`);
+        await intelligenceService.acknowledgeAlert(actionAlert.alert_id, "OFFICER_PATIL", actionNote);
+        toast.success(`Alert acknowledged.`);
       } else if (actionType === "RESOLVE") {
-        await intelligenceService.resolveAlert(actionAlert.alert_id, officerActor, actionNote);
-        toast.success(`Alert ${actionAlert.alert_id} marked resolved.`);
+        await intelligenceService.resolveAlert(actionAlert.alert_id, "OFFICER_PATIL", actionNote);
+        toast.success(`Alert marked resolved.`);
       } else if (actionType === "FALSE_POSITIVE") {
-        await intelligenceService.markFalsePositive(actionAlert.alert_id, officerActor, actionNote);
-        toast.success(`Alert ${actionAlert.alert_id} marked as false positive.`);
-      } else if (actionType === "SUPPRESS") {
-        await intelligenceService.suppressAlert(actionAlert.alert_id, officerActor, actionNote);
-        toast.success(`Alert ${actionAlert.alert_id} suppressed.`);
+        await intelligenceService.markFalsePositive(actionAlert.alert_id, "OFFICER_PATIL", actionNote);
+        toast.success(`Alert marked false positive.`);
       }
 
       setActionAlert(null);
@@ -98,428 +88,250 @@ function AlertCenterPage() {
     return a.status === statusFilter;
   });
 
-  const activeAlerts = filteredAlerts.filter((a) => !a.is_dismissed);
-  const resolvedAlerts = filteredAlerts.filter((a) => a.is_dismissed);
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* Header & Filter Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/50 pb-5">
         <div>
-          <h1 className="font-display text-xl font-bold text-foreground">
-            Explainable Ecological & Movement Alert Center
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+            Alerts & Ecological Anomalies
           </h1>
-          <p className="data-chip text-muted-foreground">
-            Deterministic anomaly triggers: Village proximity, centroid shift, and survey-effort-aware prolonged absence
+          <p className="mt-1 text-xs text-muted-foreground">
+            Movement boundary breaches, territory shifts, and village risk notifications
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 rounded-sm border border-border bg-secondary/80 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="all">All Alert States</option>
-            <option value="ACTIVE">Active (Open & Acknowledged)</option>
-            <option value="OPEN">Open Only</option>
-            <option value="ACKNOWLEDGED">Acknowledged</option>
-            <option value="RESOLVED">Resolved / Dismissed</option>
-            <option value="FALSE_POSITIVE">False Positive</option>
-            <option value="SUPPRESSED">Suppressed</option>
-          </select>
-
-          <select
-            value={severityFilter}
-            onChange={(e) => setSeverityFilter(e.target.value)}
-            className="h-9 rounded-sm border border-border bg-secondary/80 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="all">All Severities</option>
-            <option value="CRITICAL">Critical</option>
-            <option value="WARNING">Warning</option>
-            <option value="INFO">Info</option>
-          </select>
-
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="h-9 rounded-sm border border-border bg-secondary/80 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="all">All Alert Types</option>
-            <option value="VILLAGE_RISK">Village Risk (&lt;2.5 km)</option>
-            <option value="RANGE_SHIFT">Territory Shift (&gt;4.0 km)</option>
-            <option value="BUFFER_PROXIMITY">Buffer Proximity (&lt;2.0 km)</option>
-            <option value="PROLONGED_ABSENCE">Prolonged Absence (&gt;3x Median)</option>
-          </select>
+        {/* Filter Pills */}
+        <div className="flex items-center gap-2">
+          {(["all", "ACTIVE", "RESOLVED"] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setStatusFilter(filter)}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                statusFilter === filter
+                  ? "bg-primary/20 text-primary border border-primary/40"
+                  : "bg-secondary/40 text-muted-foreground border border-border/50 hover:text-foreground"
+              }`}
+            >
+              {filter === "all" ? "All Alerts" : filter === "ACTIVE" ? "Active" : "Resolved"}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Alerts Feed */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="py-20 text-center text-sm text-muted-foreground">
-            Loading active alerts from SQLite database...
-          </div>
-        ) : activeAlerts.length === 0 && resolvedAlerts.length === 0 ? (
-          <div className="panel flex flex-col items-center justify-center py-16 text-center rounded-sm">
-            <CheckCircle2 className="size-12 text-signal opacity-80" />
-            <h3 className="mt-4 font-display text-base font-semibold text-foreground">
-              Zero Actionable Alerts
-            </h3>
-            <p className="mt-1 max-w-md text-xs text-muted-foreground">
-              All camera stations and registered individuals are within normal ecological
-              parameters.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Active Alerts */}
-            <div className="space-y-3">
-              {activeAlerts.map((alt) => (
-                <div
-                  key={alt.alert_id}
-                  className={`panel rounded-sm p-5 border-l-4 transition-all ${
-                    alt.severity === "CRITICAL"
-                      ? "border-l-destructive border-border bg-destructive/5"
-                      : "border-l-primary border-border bg-primary/5"
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+      {/* Alert Feed */}
+      {loading ? (
+        <div className="py-24 text-center text-xs text-muted-foreground">
+          Loading alerts from tiger.db...
+        </div>
+      ) : filteredAlerts.length === 0 ? (
+        <div className="calm-card rounded-lg p-12 text-center space-y-3">
+          <CheckCircle2 className="size-8 text-signal mx-auto" />
+          <h3 className="font-display text-sm font-semibold text-foreground">
+            No alerts found
+          </h3>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            {statusFilter === "ACTIVE"
+              ? "All pending alerts have been addressed and resolved."
+              : "No alert records match the selected filter."}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredAlerts.map((alert) => {
+            const isCritical = alert.severity === "CRITICAL";
+            const isResolved = alert.is_dismissed || alert.status === "RESOLVED";
+            const isExpanded = expandedAlertId === alert.alert_id;
+            const evidence = alert.evidence_data || {};
+
+            return (
+              <div
+                key={alert.alert_id}
+                className={`calm-card rounded-lg p-5 transition-all space-y-4 ${
+                  isCritical && !isResolved
+                    ? "border-destructive/40 bg-destructive/5"
+                    : "border-border/40"
+                }`}
+              >
+                {/* Top Alert Header Row */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`data-chip rounded-sm px-2 py-0.5 text-xs font-bold ${
-                          alt.severity === "CRITICAL"
-                            ? "bg-destructive/20 text-destructive"
-                            : "bg-primary/20 text-primary"
+                        className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          isCritical
+                            ? "bg-destructive/20 text-destructive border border-destructive/30"
+                            : "bg-amber/20 text-amber border border-amber/30"
                         }`}
                       >
-                        {alt.severity} · {alt.alert_type}
+                        {alert.severity}
                       </span>
-                      <span className="data-chip rounded-sm bg-secondary px-2 py-0.5 text-[11px] font-mono text-foreground">
-                        Status: {alt.status || "OPEN"}
-                      </span>
-                      <span className="font-mono text-xs text-muted-foreground">
-                        {alt.alert_id}
-                      </span>
+                      <h3 className="font-display text-sm font-bold text-foreground">
+                        {alert.title || alert.alert_type}
+                      </h3>
+                      {alert.tiger_id && (
+                        <span className="rounded bg-secondary/70 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                          {alert.tiger_id}
+                        </span>
+                      )}
+                      {isResolved && (
+                        <span className="rounded bg-signal/15 px-2 py-0.5 text-[10px] font-semibold text-signal border border-signal/20">
+                          Resolved
+                        </span>
+                      )}
                     </div>
 
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {alt.timestamp}
-                    </span>
+                    <p className="text-xs text-foreground/90 leading-relaxed">
+                      {alert.explanation}
+                    </p>
                   </div>
 
-                  <h3 className="mt-3 font-display text-sm font-bold text-foreground">
-                    {alt.title}
-                  </h3>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                    {alt.explanation}
-                  </p>
+                  {/* Date/Time */}
+                  <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+                    {alert.timestamp ? new Date(alert.timestamp).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent"}
+                  </span>
+                </div>
 
-                  {alt.resolution_notes && (
-                    <div className="mt-2 rounded-sm border border-border/80 bg-secondary/50 p-2.5 text-xs">
-                      <span className="font-semibold text-foreground">Officer Note ({alt.resolved_by || "Patil"}):</span>{" "}
-                      <span className="text-muted-foreground italic">"{alt.resolution_notes}"</span>
+                {/* Evidence Summary & Actions Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-border/30">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedAlertId(isExpanded ? null : alert.alert_id)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                  >
+                    <Info className="size-3.5" />
+                    <span>{isExpanded ? "Hide detailed evidence" : "Why this alert was raised"}</span>
+                    <ChevronDown className={`size-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {/* Directed Actions */}
+                  {!isResolved ? (
+                    <div className="flex items-center gap-2">
+                      {alert.status !== "ACKNOWLEDGED" && (
+                        <button
+                          onClick={() => {
+                            setActionAlert(alert);
+                            setActionType("ACKNOWLEDGE");
+                            setActionNote("Acknowledged by Range Officer.");
+                          }}
+                          className="rounded-md bg-secondary/70 hover:bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground transition-colors border border-border/50"
+                        >
+                          Acknowledge
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setActionAlert(alert);
+                          setActionType("RESOLVE");
+                          setActionNote("Patrol verified and resolved.");
+                        }}
+                        className="rounded-md btn-amber px-3 py-1.5 text-xs font-semibold shadow-xs"
+                      >
+                        Resolve
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActionAlert(alert);
+                          setActionType("FALSE_POSITIVE");
+                          setActionNote("Reviewed: False anomaly.");
+                        }}
+                        className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        False Positive
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Check className="size-3.5 text-signal" />
+                      <span>Closed by {alert.resolved_by || "Officer"}</span>
                     </div>
                   )}
+                </div>
 
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3 text-xs">
-                    <div className="flex items-center gap-3 font-mono text-muted-foreground">
-                      {alt.tiger_id && <span>Individual: <strong className="text-primary">{alt.tiger_id}</strong></span>}
-                      {alt.station_id && <span>Station: <strong className="text-foreground">{alt.station_id}</strong></span>}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setSelectedAlert(alt)}
-                        className="flex items-center gap-1 rounded-sm border border-border bg-secondary/80 px-3 py-1 text-xs font-semibold text-foreground hover:bg-secondary"
-                      >
-                        <Eye className="size-3.5 text-primary" /> Inspect Evidence
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setActionAlert(alt);
-                          setActionType("ACKNOWLEDGE");
-                          setActionNote("");
-                        }}
-                        className="flex items-center gap-1 rounded-sm border border-border bg-secondary/40 px-3 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
-                      >
-                        <Clock className="size-3.5 text-primary" /> Acknowledge
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setActionAlert(alt);
-                          setActionType("RESOLVE");
-                          setActionNote("");
-                        }}
-                        className="flex items-center gap-1 rounded-sm border border-signal/40 bg-signal/10 px-3 py-1 text-xs font-semibold text-signal hover:bg-signal/20"
-                      >
-                        <CheckCircle2 className="size-3.5" /> Resolve
-                      </button>
+                {/* Expandable "Why this alert was raised" */}
+                {isExpanded && (
+                  <div className="rounded-md bg-secondary/30 p-4 border border-border/40 space-y-2 text-xs">
+                    <h4 className="font-semibold text-foreground text-xs uppercase tracking-wider text-muted-foreground">
+                      Anomaly Evidence Details
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
+                      {evidence.shift_km !== undefined && (
+                        <div>
+                          <span className="text-muted-foreground text-[11px] block">Displacement:</span>
+                          <span className="font-semibold text-foreground font-mono">{evidence.shift_km} km</span>
+                        </div>
+                      )}
+                      {evidence.station || alert.station_id ? (
+                        <div>
+                          <span className="text-muted-foreground text-[11px] block">Station ID:</span>
+                          <span className="font-semibold text-foreground font-mono">{evidence.station || alert.station_id}</span>
+                        </div>
+                      ) : null}
+                      {evidence.reid_similarity !== undefined && (
+                        <div>
+                          <span className="text-muted-foreground text-[11px] block">Match Similarity:</span>
+                          <span className="font-semibold text-signal font-mono">{(evidence.reid_similarity * 100).toFixed(1)}%</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Resolved Alerts Accordion */}
-            {resolvedAlerts.length > 0 && (
-              <div className="mt-8 border-t border-border pt-6">
-                <h3 className="font-display text-sm font-semibold text-muted-foreground mb-3">
-                  Resolved & Archived Alerts ({resolvedAlerts.length})
-                </h3>
-                <div className="space-y-2 opacity-75">
-                  {resolvedAlerts.map((alt) => (
-                    <div
-                      key={alt.alert_id}
-                      className="rounded-sm border border-border bg-secondary/20 p-3 text-xs flex flex-wrap items-center justify-between gap-2"
-                    >
-                      <div>
-                        <span className="font-semibold text-foreground">{alt.title}</span>
-                        <span className="ml-2 font-mono text-muted-foreground">({alt.alert_id})</span>
-                        {alt.resolution_notes && (
-                          <p className="mt-0.5 text-[11px] text-muted-foreground italic">
-                            Resolved by {alt.resolved_by || "Officer"}: "{alt.resolution_notes}"
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="data-chip rounded-sm bg-secondary px-2 py-0.5 text-[10px] font-mono">
-                          {alt.status || "RESOLVED"}
-                        </span>
-                        <button
-                          onClick={() => setSelectedAlert(alt)}
-                          className="flex items-center gap-1 rounded-sm border border-border bg-secondary/60 px-2 py-0.5 text-[11px] hover:bg-secondary"
-                        >
-                          <Eye className="size-3 text-primary" /> Evidence
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                )}
               </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Officer Lifecycle Action Dialog */}
-      {actionAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
-          <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-sm border border-border bg-[oklch(0.16_0.012_150)] shadow-2xl">
-            <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-5">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="size-4.5 text-primary" />
-                <h2 className="font-mono text-sm font-bold text-foreground">
-                  Officer Action: {actionAlert.alert_id}
-                </h2>
-              </div>
-              <button
-                onClick={() => setActionAlert(null)}
-                className="grid size-7 place-items-center rounded-sm border border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="text-muted-foreground block mb-1 font-semibold">Action Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActionType("ACKNOWLEDGE")}
-                    className={`rounded-sm border p-2 text-center font-semibold transition-all ${
-                      actionType === "ACKNOWLEDGE"
-                        ? "border-primary bg-primary/20 text-primary"
-                        : "border-border bg-secondary/40 text-muted-foreground"
-                    }`}
-                  >
-                    Acknowledge
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActionType("RESOLVE")}
-                    className={`rounded-sm border p-2 text-center font-semibold transition-all ${
-                      actionType === "RESOLVE"
-                        ? "border-signal bg-signal/20 text-signal"
-                        : "border-border bg-secondary/40 text-muted-foreground"
-                    }`}
-                  >
-                    Resolve Alert
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActionType("FALSE_POSITIVE")}
-                    className={`rounded-sm border p-2 text-center font-semibold transition-all ${
-                      actionType === "FALSE_POSITIVE"
-                        ? "border-destructive bg-destructive/20 text-destructive"
-                        : "border-border bg-secondary/40 text-muted-foreground"
-                    }`}
-                  >
-                    False Positive
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActionType("SUPPRESS")}
-                    className={`rounded-sm border p-2 text-center font-semibold transition-all ${
-                      actionType === "SUPPRESS"
-                        ? "border-border bg-secondary text-foreground"
-                        : "border-border bg-secondary/40 text-muted-foreground"
-                    }`}
-                  >
-                    Suppress Noise
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-muted-foreground block mb-1 font-semibold">Authorizing Officer</label>
-                <select
-                  value={officerActor}
-                  onChange={(e) => setOfficerActor(e.target.value)}
-                  className="w-full h-9 rounded-sm border border-border bg-secondary/80 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
-                >
-                  <option value="OFFICER_PATIL">Officer Patil (Field Investigator)</option>
-                  <option value="OFFICER_SHINDE">Officer Shinde (Range Officer Core)</option>
-                  <option value="FIELD_DIRECTOR_PENCH">Field Director Pench (Chief Conservator)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-muted-foreground block mb-1 font-semibold">
-                  Mandatory Forensic Rationale & Action Note *
-                </label>
-                <textarea
-                  value={actionNote}
-                  onChange={(e) => setActionNote(e.target.value)}
-                  placeholder="State patrol outcome, field verification details, or suppression justification..."
-                  rows={3}
-                  className="w-full rounded-sm border border-border bg-secondary/80 p-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setActionAlert(null)}
-                  className="rounded-sm border border-border bg-secondary/40 px-3 py-1.5 font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={actionSubmitting}
-                  onClick={handleExecuteAction}
-                  className="rounded-sm border border-primary bg-primary px-4 py-1.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {actionSubmitting ? "Recording Audit..." : "Submit Decision"}
-                </button>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Explainable Mathematical Evidence Modal */}
-      {selectedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-sm border border-border bg-[oklch(0.16_0.012_150)] shadow-2xl">
-            {/* Modal Header */}
-            <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-5">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="size-4.5 text-destructive" />
-                <h2 className="font-mono text-sm font-bold text-foreground">
-                  Explainable Mathematical Evidence: {selectedAlert.alert_id}
-                </h2>
-              </div>
+      {/* Action Dialog */}
+      {actionAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="calm-card w-full max-w-md rounded-lg p-6 space-y-4 shadow-2xl border border-border/80 bg-[oklch(0.16_0.014_155)]">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-sm font-bold text-foreground">
+                {actionType === "ACKNOWLEDGE"
+                  ? "Acknowledge Alert"
+                  : actionType === "RESOLVE"
+                  ? "Resolve Alert"
+                  : "Mark False Positive"}
+              </h3>
               <button
-                onClick={() => setSelectedAlert(null)}
-                className="grid size-7 place-items-center rounded-sm border border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+                onClick={() => setActionAlert(null)}
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
-              <div className="panel rounded-sm p-4 border-border">
-                <span className="data-chip text-[10px] text-muted-foreground">Alert Type & Severity</span>
-                <p className="mt-1 font-display text-sm font-bold text-foreground">
-                  {selectedAlert.title}
-                </p>
-                <p className="mt-1 text-muted-foreground leading-relaxed">
-                  {selectedAlert.explanation}
-                </p>
-              </div>
+            <p className="text-xs text-muted-foreground">
+              {actionAlert.title || actionAlert.alert_type} ({actionAlert.tiger_id})
+            </p>
 
-              {/* Specific Mathematical Payload */}
-              <div>
-                <h3 className="font-display text-xs font-semibold text-foreground mb-3">
-                  Deterministic Trigger Calculations
-                </h3>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-foreground">
+                Officer Justification Note:
+              </label>
+              <textarea
+                value={actionNote}
+                onChange={(e) => setActionNote(e.target.value)}
+                placeholder="Enter field notes for the official audit log..."
+                className="w-full h-24 rounded-md border border-border/70 bg-secondary/40 p-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              />
+            </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {selectedAlert.evidence_data?.distance_km !== undefined && (
-                    <div className="rounded-sm border border-border bg-secondary/40 p-3">
-                      <span className="text-muted-foreground">Observed Distance:</span>
-                      <p className="font-mono text-lg font-bold text-destructive mt-0.5">
-                        {selectedAlert.evidence_data.distance_km} km
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        Threshold: {selectedAlert.evidence_data.threshold_km || 2.5} km
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedAlert.evidence_data?.similarity !== undefined && (
-                    <div className="rounded-sm border border-border bg-secondary/40 p-3">
-                      <span className="text-muted-foreground">Re-ID Cosine Similarity:</span>
-                      <p className="font-mono text-lg font-bold text-primary mt-0.5">
-                        {(selectedAlert.evidence_data.similarity * 100).toFixed(1)}%
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        Decision: Confident individual match
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedAlert.evidence_data?.days_since_last_seen !== undefined && (
-                    <div className="rounded-sm border border-border bg-secondary/40 p-3">
-                      <span className="text-muted-foreground">Days Since Last Sighting:</span>
-                      <p className="font-mono text-lg font-bold text-destructive mt-0.5">
-                        {selectedAlert.evidence_data.days_since_last_seen.toFixed(1)} days
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        Median Interval: {selectedAlert.evidence_data.median_interval_days?.toFixed(1) || 7.0} days (3.0x multiplier)
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedAlert.evidence_data?.survey_effort_adequate !== undefined && (
-                    <div className="rounded-sm border border-border bg-secondary/40 p-3">
-                      <span className="text-muted-foreground">Survey Effort Verification:</span>
-                      <p className="font-mono text-xs font-bold text-signal mt-0.5">
-                        ADEQUATE ({selectedAlert.evidence_data.active_stations_in_range} active stations in range)
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        Absence anomaly is NOT a false alarm from station outage
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Raw JSON Payload */}
-              <div>
-                <span className="data-chip text-[10px] text-muted-foreground">
-                  Forensic Raw Evidence JSON
-                </span>
-                <pre className="mt-1.5 overflow-x-auto rounded-sm border border-border bg-black/60 p-3 font-mono text-[11px] text-primary">
-                  {JSON.stringify(selectedAlert.evidence_data || {}, null, 2)}
-                </pre>
-              </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => setActionAlert(null)}
+                className="rounded-md border border-border/60 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExecuteAction}
+                disabled={actionSubmitting}
+                className="rounded-md btn-amber px-4 py-1.5 text-xs font-semibold shadow-xs disabled:opacity-50"
+              >
+                {actionSubmitting ? "Updating..." : "Confirm Action"}
+              </button>
             </div>
           </div>
         </div>

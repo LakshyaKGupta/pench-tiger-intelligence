@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  Shield,
   Clock,
   Compass,
   HardDriveDownload,
   RefreshCw,
   UserCheck,
   ChevronDown,
+  ShieldCheck,
 } from "lucide-react";
 
 export function Header({
@@ -41,33 +41,27 @@ export function Header({
 
   const roles = [
     { label: "Range Forest Officer (RFO)", actor: "OFFICER_PATIL" },
-    { label: "Chief Wildlife Warden", actor: "CHIEF_WARDEN" },
     { label: "Field Wildlife Guard", actor: "BEAT_GUARD_04" },
+    { label: "Chief Wildlife Warden", actor: "CHIEF_WARDEN" },
   ];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-[oklch(0.16_0.012_150)]/90 px-6 backdrop-blur-md">
-      {/* Left: Sector & Station Telemetry */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-[oklch(0.14_0.012_150)]/95 px-6 backdrop-blur-md">
+      {/* Left: Pench Reserve Location */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 text-xs">
           <Compass className="size-4 text-primary" />
-          <span className="font-semibold text-foreground">Sector:</span>
-          <span className="data-chip rounded-sm bg-secondary px-2 py-0.5 text-foreground">
-            Pench Karmajhiri & Touria Core
-          </span>
-        </div>
-        <div className="hidden items-center gap-2 border-l border-border pl-4 text-xs sm:flex">
-          <span className="text-muted-foreground">Grid Datum:</span>
-          <span className="font-mono text-foreground">WGS84 · EPSG:4326</span>
+          <span className="font-semibold text-foreground">Pench Tiger Reserve</span>
+          <span className="text-muted-foreground hidden sm:inline">· Madhya Pradesh / Maharashtra</span>
         </div>
       </div>
 
       {/* Right: Actions, Clock & Officer Profile */}
       <div className="flex items-center gap-3">
         {/* Clock */}
-        <div className="hidden items-center gap-1.5 rounded-sm border border-border bg-secondary/40 px-2.5 py-1 font-mono text-xs text-muted-foreground md:flex">
+        <div className="hidden items-center gap-1.5 rounded-md border border-border/50 bg-secondary/30 px-2.5 py-1 text-xs text-muted-foreground md:flex">
           <Clock className="size-3.5 text-primary" />
-          <span>{time || "--:--:-- IST"}</span>
+          <span className="font-mono">{time || "--:--:-- IST"}</span>
         </div>
 
         {/* Refresh Button */}
@@ -75,8 +69,8 @@ export function Header({
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="grid size-8 place-items-center rounded-sm border border-border text-muted-foreground transition-all hover:bg-secondary hover:text-foreground disabled:opacity-50"
-            title="Refresh live data from tiger.db"
+            className="grid size-7 place-items-center rounded-md border border-border/60 text-muted-foreground transition-all hover:bg-secondary hover:text-foreground disabled:opacity-50"
+            title="Refresh live data"
           >
             <RefreshCw className={`size-3.5 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
           </button>
@@ -85,32 +79,32 @@ export function Header({
         {/* Quick Ingest Button */}
         <Link
           to="/dashboard/ingest"
-          className="hidden items-center gap-1.5 rounded-sm border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-all hover:bg-primary/20 sm:inline-flex"
+          className="hidden items-center gap-1.5 rounded-md btn-amber px-3 py-1.5 text-xs font-semibold shadow-xs sm:inline-flex"
         >
           <HardDriveDownload className="size-3.5" />
-          <span>Ingest SD Card</span>
+          <span>Ingest Data</span>
         </Link>
 
         {/* Officer Profile & Role Selector */}
         <div className="relative">
           <button
             onClick={() => setRoleOpen(!roleOpen)}
-            className="flex items-center gap-2 rounded-sm border border-border bg-secondary/60 px-2.5 py-1 text-xs text-foreground transition-all hover:bg-secondary"
+            className="flex items-center gap-2 rounded-md border border-border/60 bg-secondary/40 px-2.5 py-1 text-xs text-foreground transition-all hover:bg-secondary"
           >
-            <div className="grid size-6 place-items-center rounded-sm bg-primary/20 text-primary">
+            <div className="grid size-5.5 place-items-center rounded bg-primary/20 text-primary">
               <UserCheck className="size-3.5" />
             </div>
-            <div className="text-left">
-              <span className="block font-semibold">RFO S. Patil</span>
-              <span className="block text-[10px] text-muted-foreground">{role}</span>
+            <div className="text-left hidden sm:block">
+              <span className="block font-medium leading-none">RFO S. Patil</span>
+              <span className="block text-[10px] text-muted-foreground leading-none mt-0.5">{role}</span>
             </div>
             <ChevronDown className="size-3 text-muted-foreground" />
           </button>
 
           {roleOpen && (
-            <div className="absolute right-0 mt-1 w-60 rounded-sm border border-border bg-[oklch(0.18_0.014_155)] p-1 shadow-[var(--shadow-deep)] z-50">
-              <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground">
-                SWITCH ACTIVE ROLE
+            <div className="absolute right-0 mt-1.5 w-56 rounded-md border border-border bg-[oklch(0.16_0.014_155)] p-1.5 shadow-[var(--shadow-deep)] z-50">
+              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Active Officer Role
               </div>
               {roles.map((r) => (
                 <button
@@ -119,14 +113,14 @@ export function Header({
                     setRole(r.label);
                     setRoleOpen(false);
                   }}
-                  className={`w-full rounded-sm px-2.5 py-1.5 text-left text-xs transition-colors ${
+                  className={`w-full rounded px-2.5 py-1.5 text-left text-xs transition-colors ${
                     role === r.label
                       ? "bg-primary/20 font-semibold text-primary"
                       : "text-foreground hover:bg-secondary"
                   }`}
                 >
                   <div className="font-medium">{r.label}</div>
-                  <div className="text-[10px] text-muted-foreground">Actor ID: {r.actor}</div>
+                  <div className="text-[10px] text-muted-foreground">Officer: {r.actor}</div>
                 </button>
               ))}
             </div>

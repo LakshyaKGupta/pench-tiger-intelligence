@@ -9,7 +9,7 @@ interface MetricCardProps {
   decimals?: number;
   subtitle?: string;
   trend?: string;
-  variant?: "default" | "signal" | "alert" | "amber";
+  variant?: "default" | "signal" | "alert" | "destructive" | "amber";
 }
 
 export function MetricCard({
@@ -24,8 +24,8 @@ export function MetricCard({
 }: MetricCardProps) {
   const variantStyles = {
     default: {
-      border: "border-border",
-      iconBg: "bg-secondary text-foreground",
+      border: "border-border/50",
+      iconBg: "bg-secondary/70 text-foreground",
       accent: "text-foreground",
     },
     amber: {
@@ -43,9 +43,14 @@ export function MetricCard({
       iconBg: "bg-destructive/10 text-destructive",
       accent: "text-destructive",
     },
+    destructive: {
+      border: "border-destructive/40",
+      iconBg: "bg-destructive/10 text-destructive",
+      accent: "text-destructive",
+    },
   };
 
-  const style = variantStyles[variant];
+  const style = variantStyles[variant] || variantStyles.default;
 
   return (
     <div className={`panel relative rounded-sm p-5 transition-all hover:border-primary/50 ${style.border}`}>

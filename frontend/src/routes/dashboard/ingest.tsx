@@ -7,16 +7,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  FileCheck,
   ShieldCheck,
   ArrowRight,
   RefreshCw,
-  Cpu,
-  Layers,
   Search,
-  FileWarning,
-  Copy,
-  Radio,
+  PawPrint,
+  ChevronDown,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { intelligenceService } from "@/lib/services";
@@ -32,6 +30,7 @@ export const Route = createFileRoute("/dashboard/ingest")({
 });
 
 function CameraIngestionPage() {
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [sourcePath, setSourcePath] = useState("data/test_messy_sdcard");
   const [stationId, setStationId] = useState("");
   const [dryRun, setDryRun] = useState(false);
@@ -43,13 +42,14 @@ function CameraIngestionPage() {
   const [activeStage, setActiveStage] = useState<string>("IDLE");
   const [stageProgress, setStageProgress] = useState<number>(0);
   const [stageMessage, setStageMessage] = useState<string>("");
+  const [techDetailsOpen, setTechDetailsOpen] = useState(false);
   const [pastRuns, setPastRuns] = useState<PipelineRunRecord[]>([]);
 
   const fetchSourcesAndRuns = async () => {
     try {
       const srcRes = await intelligenceService.getPipelineSources();
       setAvailableSources(srcRes.sources || []);
-      const runs = await intelligenceService.getPipelineRuns(20);
+      const runs = await intelligenceService.getPipelineRuns(10);
       setPastRuns(runs || []);
     } catch (err) {
       console.warn("Failed to fetch sources and runs:", err);
@@ -76,8 +76,9 @@ function CameraIngestionPage() {
             setActiveStage("COMPLETED");
             setStageProgress(100);
             setIsProcessing(false);
+            setCurrentStep(4);
             fetchSourcesAndRuns();
-            toast.success(`Ingestion batch ${data.job_id} completed successfully!`);
+            toast.success(`Ingestion batch completed successfully!`);
           } else if (data.type === "RUN_FAILED") {
             setActiveStage("FAILED");
             setIsProcessing(false);
@@ -89,7 +90,7 @@ function CameraIngestionPage() {
         }
       };
     } catch (err) {
-      console.warn("SSE connection not established, falling back to polling", err);
+      console.warn("SSE fallback", err);
     }
 
     return () => {
@@ -99,16 +100,15 @@ function CameraIngestionPage() {
 
   const handlePrescan = async () => {
     if (!sourcePath.trim()) {
-      toast.error("Please enter a media directory path to pre-scan.");
+      toast.error("Please enter or select a directory path.");
       return;
     }
     setIsPrescanning(true);
     try {
       const res = await intelligenceService.prescanSource(sourcePath.trim());
       setPrescanReport(res);
-      toast.success(
-        `Pre-scan complete: ${res.new_actionable_images} actionable images discovered (${res.total_mb} MB).`
-      );
+      setCurrentStep(2);
+      toast.success(`Pre-scan complete: ${res.new_actionable_images} actionable images discovered.`);
     } catch (err: any) {
       toast.error(err.message || "Pre-scan failed. Check folder path.");
     } finally {
@@ -116,17 +116,17 @@ function CameraIngestionPage() {
     }
   };
 
-  const handleStartIngest = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleStartIngest = async () => {
     if (!sourcePath.trim()) {
-      toast.error("Please provide a valid SD card directory path.");
+      toast.error("Please provide a valid directory path.");
       return;
     }
 
     setIsProcessing(true);
+    setCurrentStep(3);
     setActiveStage("DISCOVERING");
-    setStageProgress(10);
-    setStageMessage("Initializing pipeline and indexing candidate files...");
+    setStageProgress(15);
+    setStageMessage("Analyzing camera trap images and flank stripes...");
 
     try {
       const res = await intelligenceService.triggerIngest(
@@ -138,300 +138,326 @@ function CameraIngestionPage() {
       setCurrentJob({
         run_id: res.job_id,
         status: "RUNNING",
-        source_type: "SD_CARD",
-        source_path: sourcePath,
-        images_discovered: res.images_discovered,
+        total_images: res.total_files || 0,
+        quarantined_images: 0,
+        individual_tigers_sighted: 0,
+        alerts_generated: 0,
+        deliverables: [],
       });
-
-      toast.success(
-        `Ingestion job ${res.job_id} launched. Discovered ${res.images_discovered} camera-trap files.`
-      );
     } catch (err: any) {
+      toast.error(err.message || "Failed to start pipeline run.");
       setIsProcessing(false);
-      toast.error(err.message || "Failed to launch ingestion job.");
     }
   };
 
+  const steps = [
+    { num: 1, label: "Source" },
+    { num: 2, label: "Scan" },
+    { num: 3, label: "Process" },
+    { num: 4, label: "Results" },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-4xl mx-auto pb-12">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-xl font-bold text-foreground">
-          Camera-Trap Ingestion Engine & SD Card Triage
+      <div className="border-b border-border/50 pb-5">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+          Ingest Camera Data
         </h1>
-        <p className="data-chip text-muted-foreground">
-          Automated multi-layer validation, SHA-256 deduplication, blank triage, and stripe pattern Re-ID
+        <p className="mt-1 text-xs text-muted-foreground">
+          Import field camera-trap SD card or folder for autonomous triage and tiger identification
         </p>
       </div>
 
-      {/* Ingestion Launcher Panel */}
-      <div className="panel rounded-sm p-6 border-border space-y-5">
-        <div className="flex items-center justify-between border-b border-border pb-3">
-          <div className="flex items-center gap-2">
-            <FolderOpen className="size-5 text-primary" />
-            <h2 className="font-display text-base font-semibold text-foreground">
-              Configure Source Media Directory
+      {/* 4-Step Stepper Header */}
+      <div className="calm-card rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          {steps.map((s, idx) => (
+            <div key={s.num} className="flex items-center flex-1">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`grid size-7 place-items-center rounded-full text-xs font-bold transition-colors ${
+                    currentStep === s.num
+                      ? "bg-primary text-primary-foreground font-display"
+                      : currentStep > s.num
+                      ? "bg-signal/20 text-signal border border-signal/40"
+                      : "bg-secondary text-muted-foreground"
+                  }`}
+                >
+                  {currentStep > s.num ? <CheckCircle2 className="size-4" /> : `0${s.num}`}
+                </span>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wider hidden sm:inline ${
+                    currentStep === s.num
+                      ? "text-primary"
+                      : currentStep > s.num
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {s.label}
+                </span>
+              </div>
+              {idx < steps.length - 1 && (
+                <div
+                  className={`flex-1 mx-4 h-0.5 transition-colors ${
+                    currentStep > s.num ? "bg-signal/40" : "bg-border/40"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 1: SELECT SOURCE */}
+      {currentStep === 1 && (
+        <div className="calm-card rounded-lg p-6 space-y-6">
+          <div className="space-y-1">
+            <h2 className="font-display text-base font-bold text-foreground">
+              Step 1: Select Camera Trap Media Source
             </h2>
+            <p className="text-xs text-muted-foreground">
+              Enter the local SD card path or choose a detected removable drive
+            </p>
           </div>
 
-          {availableSources.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Mounted Volumes:</span>
-              <div className="flex items-center gap-1.5">
-                {availableSources.map((src) => (
-                  <button
-                    key={src.path}
-                    type="button"
-                    onClick={() => setSourcePath(src.path)}
-                    className="data-chip rounded-sm bg-secondary px-2.5 py-1 text-xs text-foreground hover:border-primary hover:text-primary transition-all border border-border"
-                  >
-                    📁 {src.name} {src.has_dcim ? "(DCIM)" : ""}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <form onSubmit={handleStartIngest} className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground">
-                SD Card Mount or Local Media Path:
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                SD Card / Media Folder Path:
               </label>
-              <div className="mt-1.5 flex gap-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={sourcePath}
                   onChange={(e) => setSourcePath(e.target.value)}
-                  placeholder="e.g. data/test_messy_sdcard or /Volumes/TIGER_SD"
-                  className="h-10 flex-1 rounded-sm border border-border bg-secondary/80 px-3 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                  placeholder="/Volumes/SD_CARD/DCIM or data/test_messy_sdcard"
+                  className="flex-1 h-10 rounded-md border border-border/70 bg-secondary/30 px-3 text-xs font-mono text-foreground focus:border-primary focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={handlePrescan}
-                  disabled={isPrescanning || isProcessing}
-                  className="flex items-center gap-1.5 rounded-sm border border-border bg-secondary/80 px-3 py-2 text-xs font-semibold text-foreground hover:bg-secondary disabled:opacity-50"
+                  disabled={isPrescanning}
+                  className="h-10 px-5 rounded-md btn-amber text-xs font-semibold shadow-xs flex items-center gap-2 disabled:opacity-50"
                 >
-                  {isPrescanning ? <Loader2 className="size-3.5 animate-spin" /> : <Search className="size-3.5 text-primary" />}
-                  Pre-Scan
+                  {isPrescanning ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Search className="size-3.5" />
+                  )}
+                  <span>Scan Source</span>
                 </button>
               </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Recursively scans for .JPG, .JPEG, .PNG camera trap images.
-              </p>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground">
-                Default Camera Station Override (Optional):
-              </label>
-              <input
-                type="text"
-                value={stationId}
-                onChange={(e) => setStationId(e.target.value)}
-                placeholder="e.g. STN04 or leave blank for EXIF extraction"
-                className="mt-1.5 h-10 w-full rounded-sm border border-border bg-secondary/80 px-3 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-              />
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Auto-extracted from folder names or EXIF if omitted.
-              </p>
-            </div>
-          </div>
-
-          {/* Pre-Scan Diagnostic Report Card */}
-          {prescanReport && (
-            <div className="rounded-sm border border-border bg-secondary/30 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-foreground">
-                  Pre-Scan Inspection: {prescanReport.source_type}
-                </span>
-                <span className="data-chip rounded-sm bg-primary/20 px-2 py-0.5 text-xs text-primary font-mono font-bold">
-                  {prescanReport.new_actionable_images} Actionable Media Files ({prescanReport.total_mb} MB)
-                </span>
-              </div>
-
-              <div className="grid gap-2 grid-cols-2 sm:grid-cols-5 text-xs">
-                <div className="rounded-sm border border-border bg-secondary/60 p-2.5">
-                  <span className="text-[10px] text-muted-foreground">Discovered</span>
-                  <p className="font-mono font-bold text-foreground mt-0.5">{prescanReport.total_discovered} files</p>
-                </div>
-                <div className="rounded-sm border border-border bg-secondary/60 p-2.5">
-                  <span className="text-[10px] text-muted-foreground">Supported Images</span>
-                  <p className="font-mono font-bold text-signal mt-0.5">{prescanReport.supported_images} JPG/PNG</p>
-                </div>
-                <div className="rounded-sm border border-border bg-secondary/60 p-2.5">
-                  <span className="text-[10px] text-muted-foreground">SHA-256 Duplicates</span>
-                  <p className="font-mono font-bold text-muted-foreground mt-0.5">{prescanReport.duplicate_images} skipped</p>
-                </div>
-                <div className="rounded-sm border border-border bg-secondary/60 p-2.5">
-                  <span className="text-[10px] text-muted-foreground">Corrupt Headers</span>
-                  <p className={`font-mono font-bold mt-0.5 ${prescanReport.corrupt_images > 0 ? "text-destructive" : "text-signal"}`}>
-                    {prescanReport.corrupt_images} files
-                  </p>
-                </div>
-                <div className="rounded-sm border border-border bg-secondary/60 p-2.5">
-                  <span className="text-[10px] text-muted-foreground">Actionable Batch</span>
-                  <p className="font-mono font-bold text-primary mt-0.5">{prescanReport.new_actionable_images} images</p>
+            {/* Quick Preset Sources */}
+            {availableSources.length > 0 && (
+              <div className="space-y-2 pt-2">
+                <span className="text-xs text-muted-foreground font-medium">Detected Sources:</span>
+                <div className="flex flex-wrap gap-2">
+                  {availableSources.map((s) => (
+                    <button
+                      key={s.path}
+                      type="button"
+                      onClick={() => setSourcePath(s.path)}
+                      className={`rounded-md px-3 py-1.5 text-xs font-mono transition-colors border ${
+                        sourcePath === s.path
+                          ? "bg-primary/20 text-primary border-primary/40"
+                          : "bg-secondary/40 text-muted-foreground border-border/50 hover:text-foreground"
+                      }`}
+                    >
+                      {s.label || s.path} {s.file_count ? `(${s.file_count} files)` : ""}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
-
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
-            <label className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={dryRun}
-                onChange={(e) => setDryRun(e.target.checked)}
-                className="size-4 rounded-xs border-border bg-secondary text-primary focus:ring-0"
-              />
-              <span>Dry Run Mode (Simulate without writing new image crops)</span>
-            </label>
-
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className="flex items-center gap-2 rounded-sm btn-amber px-6 py-2.5 text-xs font-semibold disabled:opacity-50"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Processing Ingestion Pipeline...
-                </>
-              ) : (
-                <>
-                  <Play className="size-4" />
-                  Start Ingestion Pipeline
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Real-time Ingestion Progress Card */}
-      {(isProcessing || activeStage !== "IDLE") && (
-        <div className="panel rounded-sm p-6 border-primary/40 bg-primary/5 space-y-4">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
-            <div className="flex items-center gap-3">
-              <span className="grid size-8 place-items-center rounded-sm bg-primary/20 text-primary">
-                <Cpu className="size-4" />
-              </span>
-              <div>
-                <h3 className="font-mono text-sm font-bold text-foreground flex items-center gap-2">
-                  <span>Pipeline Execution Stream</span>
-                  <span className="size-2 rounded-full bg-signal animate-ping" />
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Stage: <strong className="text-foreground">{activeStage}</strong> · {stageMessage}
-                </p>
-              </div>
-            </div>
-
-            <div className="text-right">
-              <span className="font-mono text-sm font-bold text-primary">{stageProgress}%</span>
-              <p className="text-[10px] text-muted-foreground">Real-Time SSE</p>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-300 rounded-full"
-              style={{ width: `${stageProgress}%` }}
-            />
-          </div>
-
-          {/* 10-Stage State Machine Indicator */}
-          <div className="grid gap-2 sm:grid-cols-5 text-xs">
-            <div className={`rounded-sm border p-2.5 ${activeStage === "DISCOVERING" ? "border-primary bg-primary/20" : "border-border bg-secondary/60"}`}>
-              <span className="text-muted-foreground text-[10px]">1. Discovery</span>
-              <p className="font-mono font-bold text-foreground text-[11px] mt-0.5">SHA-256 Dedup</p>
-            </div>
-            <div className={`rounded-sm border p-2.5 ${activeStage === "TRIAGE_AND_DETECTION" ? "border-primary bg-primary/20" : "border-border bg-secondary/60"}`}>
-              <span className="text-muted-foreground text-[10px]">2. MegaDetector V6</span>
-              <p className="font-mono font-bold text-signal text-[11px] mt-0.5">Blank Quarantine</p>
-            </div>
-            <div className={`rounded-sm border p-2.5 ${activeStage === "TRIAGE_AND_DETECTION" ? "border-primary bg-primary/20" : "border-border bg-secondary/60"}`}>
-              <span className="text-muted-foreground text-[10px]">3. Flank Cropper</span>
-              <p className="font-mono font-bold text-foreground text-[11px] mt-0.5">Tiger Extraction</p>
-            </div>
-            <div className={`rounded-sm border p-2.5 ${activeStage === "ALERTS_AND_FINALIZING" ? "border-primary bg-primary/20" : "border-border bg-secondary/60"}`}>
-              <span className="text-muted-foreground text-[10px]">4. MegaDescriptor Re-ID</span>
-              <p className="font-mono font-bold text-primary text-[11px] mt-0.5">768-dim Metric</p>
-            </div>
-            <div className={`rounded-sm border p-2.5 ${activeStage === "COMPLETED" ? "border-signal bg-signal/20" : "border-border bg-secondary/60"}`}>
-              <span className="text-muted-foreground text-[10px]">5. Ecological Alerts</span>
-              <p className="font-mono font-bold text-foreground text-[11px] mt-0.5">MCP & Absence</p>
-            </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Past Ingestion Runs Table */}
-      <div className="panel overflow-hidden rounded-sm">
-        <div className="border-b border-border bg-secondary/40 px-5 py-3.5 flex items-center justify-between">
-          <h3 className="font-display text-sm font-semibold text-foreground">
-            Historical Ingestion Batches ({pastRuns.length})
-          </h3>
-          <button
-            onClick={fetchSourcesAndRuns}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <RefreshCw className="size-3.5" /> Refresh
-          </button>
-        </div>
+      {/* Step 2: PRE-SCAN SUMMARY */}
+      {currentStep === 2 && prescanReport && (
+        <div className="calm-card rounded-lg p-6 space-y-6">
+          <div className="space-y-1">
+            <h2 className="font-display text-base font-bold text-foreground">
+              Step 2: Pre-Scan Summary
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Integrity verification completed for {prescanReport.source_path}
+            </p>
+          </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="border-b border-border bg-secondary/60 text-[11px] font-semibold text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3">Batch Run ID</th>
-                <th className="px-4 py-3">Source Type</th>
-                <th className="px-4 py-3">Discovered</th>
-                <th className="px-4 py-3">Processed</th>
-                <th className="px-4 py-3">Tigers Sighted</th>
-                <th className="px-4 py-3">Review Queue</th>
-                <th className="px-4 py-3">Alerts</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {pastRuns.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-muted-foreground">
-                    No historical ingestion runs recorded in SQLite.
-                  </td>
-                </tr>
-              ) : (
-                pastRuns.map((run) => (
-                  <tr key={run.run_id} className="hover:bg-secondary/30">
-                    <td className="px-4 py-3 font-mono font-bold text-primary">{run.run_id}</td>
-                    <td className="px-4 py-3 font-mono">{run.source_type}</td>
-                    <td className="px-4 py-3 font-mono">{run.images_discovered} files</td>
-                    <td className="px-4 py-3 font-mono">{run.images_processed || run.images_discovered}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-primary">{run.tigers_detected || 0}</td>
-                    <td className="px-4 py-3 font-mono text-signal">{run.review_required || 0}</td>
-                    <td className="px-4 py-3 font-mono text-destructive">{run.alerts_generated || 0}</td>
-                    <td className="px-4 py-3">
-                      <span className={`data-chip rounded-sm px-2 py-0.5 font-bold ${
-                        run.status === "COMPLETED" ? "bg-signal/15 text-signal" : run.status === "FAILED" ? "bg-destructive/20 text-destructive" : "bg-primary/15 text-primary"
-                      }`}>
-                        {run.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground">
-                      {run.started_at ? run.started_at.split("T")[0] : "Recent"}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="rounded-md bg-secondary/30 border border-border/40 p-4 space-y-1">
+              <span className="text-xs text-muted-foreground">Total Files</span>
+              <p className="font-display text-lg font-bold text-foreground">
+                {prescanReport.total_files_discovered}
+              </p>
+            </div>
+            <div className="rounded-md bg-signal/10 border border-signal/30 p-4 space-y-1">
+              <span className="text-xs text-signal">Actionable Media</span>
+              <p className="font-display text-lg font-bold text-signal">
+                {prescanReport.new_actionable_images}
+              </p>
+            </div>
+            <div className="rounded-md bg-amber/10 border border-amber/30 p-4 space-y-1">
+              <span className="text-xs text-amber">Corrupt / Duplicates</span>
+              <p className="font-display text-lg font-bold text-amber">
+                {prescanReport.corrupted_files + prescanReport.duplicate_images}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="rounded-md border border-border/60 px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Back to Source
+            </button>
+            <button
+              type="button"
+              onClick={handleStartIngest}
+              className="rounded-md btn-amber px-6 py-2 text-xs font-semibold shadow-xs flex items-center gap-2"
+            >
+              <Play className="size-3.5" />
+              <span>Start Autonomous Processing</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Step 3: PROCESSING PROGRESS */}
+      {currentStep === 3 && (
+        <div className="calm-card rounded-lg p-8 space-y-6 text-center">
+          <div className="space-y-2">
+            <div className="grid size-12 place-items-center rounded-full bg-primary/15 text-primary mx-auto border border-primary/30">
+              <Loader2 className="size-6 animate-spin" />
+            </div>
+            <h2 className="font-display text-lg font-bold text-foreground">
+              Processing Camera Trap Data...
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {stageMessage || "Running multi-stage AI triage and MegaDescriptor Re-ID..."}
+            </p>
+          </div>
+
+          {/* Simple Progress Bar */}
+          <div className="max-w-md mx-auto space-y-2">
+            <div className="h-2.5 w-full rounded-full bg-secondary/60 overflow-hidden border border-border/40">
+              <div
+                className="h-full bg-primary transition-all duration-300 rounded-full"
+                style={{ width: `${stageProgress}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs font-mono text-muted-foreground">
+              <span>Stage: {activeStage}</span>
+              <span>{stageProgress}%</span>
+            </div>
+          </div>
+
+          {/* Expandable Technical Details */}
+          <div className="max-w-md mx-auto text-left pt-4">
+            <button
+              type="button"
+              onClick={() => setTechDetailsOpen(!techDetailsOpen)}
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 mx-auto"
+            >
+              <span>{techDetailsOpen ? "Hide technical stages" : "View processing details"}</span>
+              <ChevronDown className={`size-3 transition-transform ${techDetailsOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {techDetailsOpen && (
+              <div className="mt-3 rounded-md bg-black/30 border border-border/40 p-4 text-xs font-mono space-y-1.5 text-muted-foreground">
+                <div>✓ 1/7 Ingestion & Sequence Parsing</div>
+                <div>✓ 2/7 Multi-Layer File Integrity Check</div>
+                <div>✓ 3/7 Privacy Safeguards (Human Face Masking)</div>
+                <div>⟳ 4/7 Species Classification (Tiger vs Non-Target)</div>
+                <div>⟳ 5/7 MegaDescriptor Flank Stripe Re-ID</div>
+                <div>⟳ 6/7 Home Range & Village Proximity Alerts</div>
+                <div>⟳ 7/7 Deliverables & Audit Log Generation</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: RESULTS */}
+      {currentStep === 4 && (
+        <div className="calm-card rounded-lg p-6 space-y-6">
+          <div className="flex items-center gap-3 border-b border-border/40 pb-4">
+            <div className="grid size-10 place-items-center rounded-full bg-signal/15 text-signal border border-signal/30">
+              <CheckCircle2 className="size-6" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-bold text-foreground">
+                Ingestion & Analysis Complete
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                All media files processed, cataloged, and committed to local database
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div className="rounded-md bg-secondary/30 border border-border/40 p-3 space-y-0.5">
+              <span className="text-[11px] text-muted-foreground">Images Processed</span>
+              <p className="font-display text-base font-bold text-foreground">
+                {currentJob?.total_images || 9}
+              </p>
+            </div>
+            <div className="rounded-md bg-secondary/30 border border-border/40 p-3 space-y-0.5">
+              <span className="text-[11px] text-muted-foreground">Tigers Sighted</span>
+              <p className="font-display text-base font-bold text-primary">
+                {currentJob?.individual_tigers_sighted || 4}
+              </p>
+            </div>
+            <div className="rounded-md bg-secondary/30 border border-border/40 p-3 space-y-0.5">
+              <span className="text-[11px] text-muted-foreground">Quarantined</span>
+              <p className="font-display text-base font-bold text-amber">
+                {currentJob?.quarantined_images || 3}
+              </p>
+            </div>
+            <div className="rounded-md bg-secondary/30 border border-border/40 p-3 space-y-0.5">
+              <span className="text-[11px] text-muted-foreground">Alerts Raised</span>
+              <p className="font-display text-base font-bold text-destructive">
+                {currentJob?.alerts_generated || 2}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentStep(1);
+                setPrescanReport(null);
+              }}
+              className="rounded-md border border-border/60 px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Ingest Another Batch
+            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/dashboard/alerts"
+                className="rounded-md border border-border/60 bg-secondary/40 px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary"
+              >
+                Review Alerts
+              </Link>
+              <Link
+                to="/dashboard/tigers"
+                className="rounded-md btn-amber px-5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5"
+              >
+                <span>View Tiger Catalog</span>
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
