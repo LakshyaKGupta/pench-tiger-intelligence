@@ -5,7 +5,7 @@ import cta from "@/assets/cta-wild.jpg";
 
 export function FinalCTA() {
   return (
-    <section className="relative isolate overflow-hidden border-t border-border">
+    <section className="relative isolate min-h-screen flex flex-col justify-center overflow-hidden border-t border-border">
       <img
         src={cta}
         alt="Tiger walking through tall grass at dusk in a tiger reserve"

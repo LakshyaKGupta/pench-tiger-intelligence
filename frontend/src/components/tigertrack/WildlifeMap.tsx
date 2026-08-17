@@ -33,7 +33,7 @@ export function WildlifeMap() {
   const [active, setActive] = useState<Marker | null>(null);
 
   return (
-    <section id="map" className="border-t border-border py-24 sm:py-32">
+    <section id="map" className="min-h-screen flex flex-col justify-center border-t border-border py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           eyebrow="Area occupancy"

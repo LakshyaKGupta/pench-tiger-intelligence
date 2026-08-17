@@ -155,7 +155,7 @@ export function WildlifeGISMapPage() {
       </div>
 
       {/* Main Reserve Map Surface */}
-      <div className="calm-card relative overflow-hidden rounded-lg border border-border/70 p-4 bg-[oklch(0.11_0.015_150)] shadow-lg">
+      <div className="calm-card relative min-h-[calc(100vh-210px)] flex flex-col justify-center overflow-hidden rounded-lg border border-border/70 p-4 bg-[oklch(0.11_0.015_150)] shadow-lg">
         {/* Floating Zoom Controls */}
         <div className="absolute top-6 right-6 z-20 flex flex-col gap-1.5 rounded-md border border-border/60 bg-[oklch(0.15_0.012_150)]/90 p-1.5 shadow-md backdrop-blur-md">
           <button

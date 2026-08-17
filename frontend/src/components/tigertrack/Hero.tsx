@@ -46,7 +46,7 @@ export function Hero() {
     <section
       id="home"
       ref={ref}
-      className="relative isolate flex min-h-[100svh] items-center overflow-hidden night-bg pt-28 pb-16 sm:pt-32"
+      className="relative isolate flex min-h-screen items-center justify-center overflow-hidden night-bg pt-20 pb-12 sm:pt-24"
     >
       {/* depth layer 1: forest */}
       <div

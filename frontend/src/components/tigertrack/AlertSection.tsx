@@ -39,7 +39,7 @@ export function AlertSection() {
   return (
     <section
       id="alerts"
-      className="relative overflow-hidden border-t border-border bg-forest-deep py-24 sm:py-32"
+      className="relative min-h-screen flex flex-col justify-center overflow-hidden border-t border-border bg-forest-deep py-20 sm:py-24"
     >
       <div className="pointer-events-none absolute inset-0 grid-lines opacity-[0.1]" />
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">

@@ -20,7 +20,7 @@ export function IntelligenceDashboard() {
   return (
     <section
       id="intelligence"
-      className="relative border-t border-border py-24 night-bg sm:py-32"
+      className="relative min-h-screen flex flex-col justify-center border-t border-border py-20 night-bg sm:py-24"
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading

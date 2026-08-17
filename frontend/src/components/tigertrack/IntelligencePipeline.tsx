@@ -43,7 +43,7 @@ const steps = [
 
 export function IntelligencePipeline() {
   return (
-    <section id="pipeline" className="relative overflow-hidden border-t border-border py-24 sm:py-32">
+    <section id="pipeline" className="relative min-h-screen flex flex-col justify-center overflow-hidden border-t border-border py-20 sm:py-24">
       <div className="pointer-events-none absolute inset-0 grid-lines opacity-[0.08]" />
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
