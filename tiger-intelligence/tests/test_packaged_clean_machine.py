@@ -96,8 +96,8 @@ class TestPackagedCleanMachine(unittest.TestCase):
             text=True,
         )
 
-        # Wait for API server to become responsive
-        max_attempts = 100
+        # Wait for API server to become responsive (allow time for single-file PyInstaller self-extraction)
+        max_attempts = 240
         for attempt in range(max_attempts):
             time.sleep(0.5)
             if proc.poll() is not None:
