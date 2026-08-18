@@ -23,6 +23,7 @@ import { Route as DashboardIngestRouteImport } from './routes/dashboard/ingest'
 import { Route as DashboardMapRouteImport } from './routes/dashboard/map'
 import { Route as DashboardMovementRouteImport } from './routes/dashboard/movement'
 import { Route as DashboardPipelineRouteImport } from './routes/dashboard/pipeline'
+import { Route as DashboardQuarantineRouteImport } from './routes/dashboard/quarantine'
 import { Route as DashboardReviewRouteImport } from './routes/dashboard/review'
 import { Route as DashboardStationsRouteImport } from './routes/dashboard/stations'
 import { Route as DashboardSystemRouteImport } from './routes/dashboard/system'
@@ -98,6 +99,11 @@ const DashboardPipelineRoute = DashboardPipelineRouteImport.update({
   path: '/pipeline',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardQuarantineRoute = DashboardQuarantineRouteImport.update({
+  id: '/quarantine',
+  path: '/quarantine',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardReviewRoute = DashboardReviewRouteImport.update({
   id: '/review',
   path: '/review',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/map': typeof DashboardMapRoute
   '/dashboard/movement': typeof DashboardMovementRoute
   '/dashboard/pipeline': typeof DashboardPipelineRoute
+  '/dashboard/quarantine': typeof DashboardQuarantineRoute
   '/dashboard/review': typeof DashboardReviewRoute
   '/dashboard/stations': typeof DashboardStationsRoute
   '/dashboard/system': typeof DashboardSystemRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/dashboard/map': typeof DashboardMapRoute
   '/dashboard/movement': typeof DashboardMovementRoute
   '/dashboard/pipeline': typeof DashboardPipelineRoute
+  '/dashboard/quarantine': typeof DashboardQuarantineRoute
   '/dashboard/review': typeof DashboardReviewRoute
   '/dashboard/stations': typeof DashboardStationsRoute
   '/dashboard/system': typeof DashboardSystemRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/dashboard/map': typeof DashboardMapRoute
   '/dashboard/movement': typeof DashboardMovementRoute
   '/dashboard/pipeline': typeof DashboardPipelineRoute
+  '/dashboard/quarantine': typeof DashboardQuarantineRoute
   '/dashboard/review': typeof DashboardReviewRoute
   '/dashboard/stations': typeof DashboardStationsRoute
   '/dashboard/system': typeof DashboardSystemRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/dashboard/map'
     | '/dashboard/movement'
     | '/dashboard/pipeline'
+    | '/dashboard/quarantine'
     | '/dashboard/review'
     | '/dashboard/stations'
     | '/dashboard/system'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/dashboard/map'
     | '/dashboard/movement'
     | '/dashboard/pipeline'
+    | '/dashboard/quarantine'
     | '/dashboard/review'
     | '/dashboard/stations'
     | '/dashboard/system'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/dashboard/map'
     | '/dashboard/movement'
     | '/dashboard/pipeline'
+    | '/dashboard/quarantine'
     | '/dashboard/review'
     | '/dashboard/stations'
     | '/dashboard/system'
@@ -348,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPipelineRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/quarantine': {
+      id: '/dashboard/quarantine'
+      path: '/quarantine'
+      fullPath: '/dashboard/quarantine'
+      preLoaderRoute: typeof DashboardQuarantineRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/review': {
       id: '/dashboard/review'
       path: '/review'
@@ -389,6 +408,7 @@ interface DashboardRouteChildren {
   DashboardMapRoute: typeof DashboardMapRoute
   DashboardMovementRoute: typeof DashboardMovementRoute
   DashboardPipelineRoute: typeof DashboardPipelineRoute
+  DashboardQuarantineRoute: typeof DashboardQuarantineRoute
   DashboardReviewRoute: typeof DashboardReviewRoute
   DashboardStationsRoute: typeof DashboardStationsRoute
   DashboardSystemRoute: typeof DashboardSystemRoute
@@ -406,6 +426,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardMapRoute: DashboardMapRoute,
   DashboardMovementRoute: DashboardMovementRoute,
   DashboardPipelineRoute: DashboardPipelineRoute,
+  DashboardQuarantineRoute: DashboardQuarantineRoute,
   DashboardReviewRoute: DashboardReviewRoute,
   DashboardStationsRoute: DashboardStationsRoute,
   DashboardSystemRoute: DashboardSystemRoute,

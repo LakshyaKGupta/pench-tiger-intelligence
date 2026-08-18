@@ -29,6 +29,12 @@ export const intelligenceService = {
   // Tigers
   getTigers: () => api.get<TigerProfile[]>("/tigers"),
   getTigerProfile: (tigerId: string) => api.get<TigerDeepProfile>(`/tigers/${tigerId}`),
+  quarantineTiger: (tigerId: string, reason: string = "Officer Marked as Not a Tiger", actor: string = "OFFICER_ON_DUTY") =>
+    api.post<{ status: string; message: string; tiger_id: string }>(`/tigers/${tigerId}/quarantine`, { reason, actor }),
+  reclassifyTiger: (tigerId: string, newSpecies: string, actor: string = "OFFICER_ON_DUTY") =>
+    api.post<{ status: string; message: string; tiger_id: string }>(`/tigers/${tigerId}/reclassify`, { new_species: newSpecies, actor }),
+  getQuarantineItems: () =>
+    api.get<{ total_quarantined: number; items: any[] }>("/quarantine"),
 
   // Detections
   getDetections: (params?: {
@@ -212,4 +218,12 @@ export const intelligenceService = {
     actor?: string;
     limit?: number;
   }) => api.get<AuditLogRecord[]>("/audit", params),
+
+  // Spatial GIS & Movement Intelligence
+  getMovement: (tigerId?: string) =>
+    api.get<MovementRecord[]>("/movement", tigerId ? { tiger_id: tigerId } : undefined),
+
+  getMapGeoJSON: () =>
+    api.get<GeoJSONFeatureCollection>("/map/geojson"),
 };
+

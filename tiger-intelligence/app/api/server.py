@@ -137,6 +137,16 @@ class AlertActionRequest(BaseModel):
     notes: Optional[str] = Field("", description="Mandatory justification rationale note")
 
 
+class QuarantineTigerRequest(BaseModel):
+    reason: str = Field("Officer Marked as Not a Tiger", description="Quarantine rationale")
+    actor: Optional[str] = Field(None, description="Acting officer")
+
+
+class ReclassifyTigerRequest(BaseModel):
+    new_species: str = Field(..., description="Target wildlife species e.g. sloth_bear, canine_dhole, cattle_gaur")
+    actor: Optional[str] = Field(None, description="Acting officer")
+
+
 class IngestRequest(BaseModel):
     source_path: str = Field(..., description="Path to SD card directory or local folder")
     station_id: Optional[str] = Field(None, description="Optional default camera station override")
@@ -414,6 +424,105 @@ def get_tiger_profile(tiger_id: str):
     })
 
 
+@app.post("/api/tigers/{tiger_id}/quarantine")
+def quarantine_tiger_endpoint(tiger_id: str, req: QuarantineTigerRequest, request: Request):
+    """
+    Officer intervention: Mark a tiger profile as non-tiger and quarantine its images.
+    """
+    acting_officer = _resolve_acting_officer(request, req.actor)
+    success = db.quarantine_tiger(tiger_id=tiger_id, reason=req.reason, actor=acting_officer)
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Failed to quarantine tiger '{tiger_id}'")
+    return {
+        "status": "success",
+        "message": f"Tiger profile '{tiger_id}' has been excluded from catalog and moved to quarantine.",
+        "tiger_id": tiger_id,
+        "actor": acting_officer,
+    }
+
+
+@app.post("/api/tigers/{tiger_id}/reclassify")
+def reclassify_tiger_endpoint(tiger_id: str, req: ReclassifyTigerRequest, request: Request):
+    """
+    Officer intervention: Reclassify an erroneous tiger profile as another wildlife species.
+    """
+    acting_officer = _resolve_acting_officer(request, req.actor)
+    success = db.reclassify_tiger_species(tiger_id=tiger_id, new_species=req.new_species, actor=acting_officer)
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Failed to reclassify tiger '{tiger_id}'")
+    return {
+        "status": "success",
+        "message": f"Tiger profile '{tiger_id}' reclassified as '{req.new_species}'.",
+        "tiger_id": tiger_id,
+        "new_species": req.new_species,
+        "actor": acting_officer,
+    }
+
+
+@app.get("/api/quarantine")
+def get_quarantine_items():
+    """
+    Retrieve all quarantined media: blank frames, corrupt files, rejected non-tigers, and privacy-protected frames.
+    """
+    with db._get_connection() as conn:
+        rows = conn.execute("""
+            SELECT
+                i.image_id,
+                i.file_name,
+                i.original_path,
+                i.file_size_bytes,
+                i.station_id,
+                i.timestamp,
+                i.is_corrupt,
+                i.status as image_status,
+                d.detection_id,
+                d.detected_species,
+                d.human_decision,
+                d.human_actor,
+                d.human_timestamp
+            FROM images i
+            LEFT JOIN detections d ON i.image_id = d.image_id
+            WHERE i.is_corrupt = 1
+               OR i.status IN ('quarantine', 'quarantine_rejected', 'quarantined_by_officer', 'corrupt_quarantined', 'blank_quarantined')
+               OR d.detected_species IN ('rejected_non_tiger', 'rejected')
+               OR d.human_decision = 'REJECTED'
+            ORDER BY i.timestamp DESC
+        """).fetchall()
+
+        items = []
+        for r in rows:
+            rd = dict(r)
+            cat = "BLANK_FRAME"
+            reason = "No animal or human subject detected in sensor frame"
+            if rd.get("is_corrupt") or "corrupt" in (rd.get("image_status") or ""):
+                cat = "CORRUPT_MEDIA"
+                reason = "Truncated file or invalid image headers detected by integrity check"
+            elif rd.get("human_decision") == "REJECTED" or "officer" in (rd.get("image_status") or ""):
+                cat = "OFFICER_REJECTED"
+                reason = "Marked as Not a Tiger / Excluded by Forest Officer"
+            elif rd.get("detected_species") and rd.get("detected_species") != "tiger":
+                cat = "NON_TARGET_WILDLIFE"
+                reason = f"Identified as non-tiger wildlife ({rd.get('detected_species')})"
+
+            items.append(_sanitize_dict({
+                "image_id": rd.get("image_id"),
+                "file_name": rd.get("file_name"),
+                "original_path": rd.get("original_path"),
+                "file_size_bytes": rd.get("file_size_bytes"),
+                "station_id": rd.get("station_id") or "STN01",
+                "timestamp": rd.get("timestamp"),
+                "category": cat,
+                "reason": reason,
+                "status": rd.get("image_status") or "quarantined",
+                "officer": rd.get("human_actor"),
+            }))
+
+    return {
+        "total_quarantined": len(items),
+        "items": items,
+    }
+
+
 # ── Detection Center & Human-in-the-Loop Review ────────────────────────────────
 
 @app.get("/api/detections")
@@ -509,7 +618,7 @@ def _resolve_acting_officer(request: Request, client_actor: Optional[str] = None
 
 
 @app.post("/api/detections/{detection_id}/verify")
-def submit_human_verification(detection_id: str, req: VerificationRequest, request: Request):
+def submit_human_verification(detection_id: str, req: HumanReviewRequest, request: Request):
     """
     Submit officer verification decision (CONFIRMED, REJECTED, REASSIGNED, NEW_TIGER).
     Persists decision, updates trajectory, and logs immutable forensic audit trail.
@@ -1423,9 +1532,9 @@ async def upload_and_ingest(
     exif_previews = []
     errors = []
 
-    IMG_EXTS = {".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"}
+    IMG_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".tif", ".jfif"}
     for upload in files:
-        if Path(upload.filename).suffix not in IMG_EXTS:
+        if Path(upload.filename).suffix.lower() not in IMG_EXTS:
             errors.append(f"{upload.filename}: unsupported format")
             continue
         dest = staging_dir / Path(upload.filename).name

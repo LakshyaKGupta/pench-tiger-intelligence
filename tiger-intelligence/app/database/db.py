@@ -869,6 +869,28 @@ class TigerDatabase:
                     )
             elif human_decision == "REJECTED":
                 conn.execute("DELETE FROM movement_records WHERE detection_id = ?", (detection_id,))
+                conn.execute(
+                    """
+                    UPDATE detections SET
+                        detected_species = 'rejected_non_tiger',
+                        is_animal = 0,
+                        reid_matched_tiger_id = NULL,
+                        verified_tiger_id = NULL
+                    WHERE detection_id = ?
+                    """,
+                    (detection_id,)
+                )
+                if det.get("image_id"):
+                    conn.execute("UPDATE images SET status = 'quarantine_rejected' WHERE image_id = ?", (det["image_id"],))
+
+                # If the tiger now has no valid detections, remove from catalog
+                if orig_tiger_id:
+                    rem_count = conn.execute(
+                        "SELECT COUNT(*) FROM detections WHERE (reid_matched_tiger_id = ? OR verified_tiger_id = ?) AND detected_species = 'tiger'",
+                        (orig_tiger_id, orig_tiger_id)
+                    ).fetchone()[0]
+                    if rem_count == 0:
+                        conn.execute("DELETE FROM tigers WHERE tiger_id = ?", (orig_tiger_id,))
 
         # 4. Recalculate spatial metrics for affected tigers
         if orig_tiger_id:
@@ -890,6 +912,102 @@ class TigerDatabase:
             }),
         )
         return True
+
+    def quarantine_tiger(self, tiger_id: str, reason: str = "Officer Marked as Not a Tiger", actor: str = "OFFICER") -> bool:
+        """
+        Human intervention: Mark an entire tiger profile or erroneous detection as non-tiger / quarantine.
+        Removes the tiger from active catalog, updates all detections to rejected_non_tiger,
+        quarantines the images, and logs forensic audit event.
+        """
+        with self._get_connection() as conn:
+            dets = conn.execute(
+                "SELECT detection_id, image_id FROM detections WHERE reid_matched_tiger_id = ? OR verified_tiger_id = ?",
+                (tiger_id, tiger_id)
+            ).fetchall()
+
+            for d in dets:
+                det_id = d[0]
+                img_id = d[1]
+                conn.execute("DELETE FROM movement_records WHERE detection_id = ?", (det_id,))
+                conn.execute(
+                    """
+                    UPDATE detections SET
+                        detected_species = 'rejected_non_tiger',
+                        is_animal = 0,
+                        reid_matched_tiger_id = NULL,
+                        verified_tiger_id = NULL,
+                        human_decision = 'REJECTED',
+                        human_actor = ?,
+                        human_timestamp = datetime('now', 'utc'),
+                        human_verified = 1
+                    WHERE detection_id = ?
+                    """,
+                    (actor, det_id)
+                )
+                if img_id:
+                    conn.execute("UPDATE images SET status = 'quarantined_by_officer' WHERE image_id = ?", (img_id,))
+
+            conn.execute("DELETE FROM tigers WHERE tiger_id = ?", (tiger_id,))
+
+            self.log_audit(
+                entity_type="tiger",
+                entity_id=tiger_id,
+                action="tiger_quarantined_by_officer",
+                actor=actor,
+                details=json.dumps({
+                    "reason": reason,
+                    "detections_quarantined": len(dets),
+                    "timestamp": datetime.now().isoformat(),
+                })
+            )
+            return True
+
+    def reclassify_tiger_species(self, tiger_id: str, new_species: str, actor: str = "OFFICER") -> bool:
+        """
+        Reclassify an erroneous tiger profile to another wildlife species (e.g. sloth_bear, canine_dhole, cattle_gaur).
+        """
+        with self._get_connection() as conn:
+            dets = conn.execute(
+                "SELECT detection_id, image_id FROM detections WHERE reid_matched_tiger_id = ? OR verified_tiger_id = ?",
+                (tiger_id, tiger_id)
+            ).fetchall()
+
+            for d in dets:
+                det_id = d[0]
+                img_id = d[1]
+                conn.execute("DELETE FROM movement_records WHERE detection_id = ?", (det_id,))
+                conn.execute(
+                    """
+                    UPDATE detections SET
+                        detected_species = ?,
+                        is_animal = 1,
+                        reid_matched_tiger_id = NULL,
+                        verified_tiger_id = NULL,
+                        human_decision = 'REASSIGNED_SPECIES',
+                        human_actor = ?,
+                        human_timestamp = datetime('now', 'utc'),
+                        human_verified = 1
+                    WHERE detection_id = ?
+                    """,
+                    (new_species, actor, det_id)
+                )
+                if img_id:
+                    conn.execute("UPDATE images SET status = 'non_target_retained' WHERE image_id = ?", (img_id,))
+
+            conn.execute("DELETE FROM tigers WHERE tiger_id = ?", (tiger_id,))
+
+            self.log_audit(
+                entity_type="tiger",
+                entity_id=tiger_id,
+                action="tiger_species_reclassified",
+                actor=actor,
+                details=json.dumps({
+                    "new_species": new_species,
+                    "detections_count": len(dets),
+                    "timestamp": datetime.now().isoformat(),
+                })
+            )
+            return True
 
     def get_pending_reviews(self) -> List[dict]:
         """

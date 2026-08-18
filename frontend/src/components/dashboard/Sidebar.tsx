@@ -66,6 +66,7 @@ export function Sidebar({
       badge: reviewCount > 0 ? reviewCount : undefined,
       badgeColor: "bg-amber/20 text-amber border-amber/40",
     },
+    { label: "Quarantine Vault", href: "/dashboard/quarantine", icon: ShieldCheck },
     { label: "Camera Stations", href: "/dashboard/stations", icon: Radio },
     { label: "All Detections", href: "/dashboard/detections", icon: Camera },
     { label: "Image Library", href: "/dashboard/images", icon: ImageIcon },

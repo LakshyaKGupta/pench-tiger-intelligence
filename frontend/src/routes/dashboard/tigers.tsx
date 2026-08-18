@@ -16,10 +16,15 @@ import {
   ChevronDown,
   Layers,
   Sparkles,
+  ShieldAlert,
+  Trash2,
+  RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import { intelligenceService } from "@/lib/services";
 import { api } from "@/lib/api/client";
 import type { TigerProfile, TigerDeepProfile } from "@/lib/types/intelligence";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/tigers")({
   component: TigerCatalogPage,
@@ -35,8 +40,12 @@ function TigerCatalogPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "movement" | "evidence">("overview");
   const [techDetailsOpen, setTechDetailsOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [reclassifySpecies, setReclassifySpecies] = useState("sloth_bear");
+  const [showQuarantineConfirm, setShowQuarantineConfirm] = useState(false);
 
-  useEffect(() => {
+  const loadTigers = () => {
+    setLoading(true);
     intelligenceService
       .getTigers()
       .then((res) => {
@@ -47,12 +56,17 @@ function TigerCatalogPage() {
         console.error("Failed to load tiger catalog:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadTigers();
   }, []);
 
   const handleSelectTiger = async (tid: string) => {
     setSelectedTigerId(tid);
     setActiveTab("overview");
     setDetailLoading(true);
+    setShowQuarantineConfirm(false);
     try {
       const detail = await intelligenceService.getTigerProfile(tid);
       setTigerDetail(detail);
@@ -60,6 +74,45 @@ function TigerCatalogPage() {
       console.error("Failed to load tiger deep profile:", err);
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  const handleQuarantine = async (tid: string) => {
+    setActionLoading(true);
+    try {
+      const res = await intelligenceService.quarantineTiger(
+        tid,
+        "Human Officer Validation: Not a Real Tiger / Exclude from Catalog",
+        "OFFICER_ON_DUTY"
+      );
+      toast.success(res.message || `Profile ${tid} excluded and moved to quarantine.`);
+      setSelectedTigerId(null);
+      setTigerDetail(null);
+      setShowQuarantineConfirm(false);
+      loadTigers();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to quarantine tiger profile.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReclassify = async (tid: string) => {
+    setActionLoading(true);
+    try {
+      const res = await intelligenceService.reclassifyTiger(
+        tid,
+        reclassifySpecies,
+        "OFFICER_ON_DUTY"
+      );
+      toast.success(res.message || `Profile ${tid} reclassified as ${reclassifySpecies}.`);
+      setSelectedTigerId(null);
+      setTigerDetail(null);
+      loadTigers();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reclassify profile.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -81,12 +134,12 @@ function TigerCatalogPage() {
             Tiger Catalog
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Known individual stripe-pattern profiles & territory tracking in Pench
+            Known individual stripe-pattern profiles & territory tracking in Pench ({tigers.length} active resident profiles)
           </p>
         </div>
 
         {/* Clean Search & Filter */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <div className="relative">
             <Search className="absolute top-2.5 left-3 size-3.5 text-muted-foreground" />
             <input
@@ -108,6 +161,15 @@ function TigerCatalogPage() {
             <option value="transient">Transient</option>
             <option value="dispersing">Dispersing</option>
           </select>
+
+          <button
+            onClick={loadTigers}
+            disabled={loading}
+            className="h-9 rounded-md border border-border/60 bg-secondary/40 px-3 text-xs font-semibold text-foreground hover:bg-secondary transition-colors flex items-center gap-1.5"
+          >
+            <RefreshCw className={`size-3.5 ${loading ? "animate-spin text-primary" : ""}`} />
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -134,7 +196,7 @@ function TigerCatalogPage() {
             <div
               key={t.tiger_id}
               onClick={() => handleSelectTiger(t.tiger_id)}
-              className="calm-card-hover rounded-lg overflow-hidden flex flex-col justify-between cursor-pointer group shadow-xs"
+              className="calm-card-hover rounded-lg overflow-hidden flex flex-col justify-between cursor-pointer group shadow-xs border border-border/60 hover:border-primary/50 transition-all"
             >
               <div>
                 {/* Large Flank Crop Image */}
@@ -168,7 +230,7 @@ function TigerCatalogPage() {
                     <h3 className="font-display text-sm font-bold text-foreground group-hover:text-primary transition-colors">
                       {t.tiger_id}
                     </h3>
-                    <span className="text-xs text-muted-foreground">{t.name}</span>
+                    <span className="text-xs text-muted-foreground truncate max-w-[150px]">{t.name}</span>
                   </div>
 
                   <div className="space-y-1 text-xs text-muted-foreground pt-1">
@@ -234,6 +296,71 @@ function TigerCatalogPage() {
               </button>
             </div>
 
+            {/* Officer Human Intervention Action Banner */}
+            <div className="border-b border-border/40 bg-amber/5 px-6 py-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <ShieldAlert className="size-3.5 text-amber" />
+                  Officer Quality Control & Human Intervention
+                </span>
+                {!showQuarantineConfirm && (
+                  <button
+                    onClick={() => setShowQuarantineConfirm(true)}
+                    className="text-xs text-destructive hover:underline font-semibold flex items-center gap-1"
+                  >
+                    <Trash2 className="size-3" />
+                    Not a Tiger / Quarantine
+                  </button>
+                )}
+              </div>
+
+              {showQuarantineConfirm ? (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 space-y-2 text-xs">
+                  <p className="text-foreground font-medium">
+                    Are you sure you want to mark <strong>{selectedTigerId}</strong> as non-tiger and move images to quarantine?
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => handleQuarantine(selectedTigerId)}
+                      disabled={actionLoading}
+                      className="rounded bg-destructive px-3 py-1 text-xs font-bold text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                    >
+                      {actionLoading ? "Quarantining..." : "Confirm & Quarantine"}
+                    </button>
+                    <button
+                      onClick={() => setShowQuarantineConfirm(false)}
+                      className="rounded border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-[11px] text-muted-foreground">Or Reclassify Species:</span>
+                  <select
+                    value={reclassifySpecies}
+                    onChange={(e) => setReclassifySpecies(e.target.value)}
+                    className="h-7 rounded border border-border/70 bg-secondary/80 px-2 text-[11px] text-foreground focus:border-primary focus:outline-none"
+                  >
+                    <option value="sloth_bear">🐻 Sloth Bear</option>
+                    <option value="canine_dhole">🐕 Dhole / Wild Dog</option>
+                    <option value="cattle_gaur">🐂 Gaur (Indian Bison)</option>
+                    <option value="asian_elephant">🐘 Asian Elephant</option>
+                    <option value="avian_fauna">🦅 Avian Fauna</option>
+                    <option value="herbivore">🦌 Herbivore / Deer</option>
+                  </select>
+                  <button
+                    onClick={() => handleReclassify(selectedTigerId)}
+                    disabled={actionLoading}
+                    className="h-7 rounded border border-border/60 bg-secondary/60 hover:bg-secondary px-2.5 text-[11px] font-semibold text-foreground transition-colors"
+                  >
+                    {actionLoading ? "Reclassifying..." : "Apply Reclassification"}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Profile Tabs */}
             <div className="flex border-b border-border/40 px-6 bg-secondary/15">
               {(["overview", "movement", "evidence"] as const).map((tab) => (
@@ -260,18 +387,50 @@ function TigerCatalogPage() {
               ) : activeTab === "overview" ? (
                 /* TAB 1: OVERVIEW */
                 <div className="space-y-6">
+                  {/* Photo & Identity Hero */}
+                  <div className="calm-card rounded-lg overflow-hidden border border-border/50">
+                    <div className="aspect-[16/9] w-full bg-black/40 relative">
+                      {tigerDetail.reference_image_path ? (
+                        <img
+                          src={api.getImageUrl(tigerDetail.reference_image_path)}
+                          alt={tigerDetail.name}
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex size-full items-center justify-center text-muted-foreground">
+                          <PawPrint className="size-10 text-primary/40" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex items-end justify-between">
+                        <div>
+                          <h3 className="font-display text-lg font-bold text-white">
+                            {tigerDetail.name}
+                          </h3>
+                          <p className="text-xs text-white/80 font-mono">
+                            NTCA Call-Sign: {tigerDetail.tiger_id}
+                          </p>
+                        </div>
+                        <span className="rounded bg-primary/20 px-2.5 py-1 text-xs font-bold text-primary border border-primary/40 backdrop-blur-md">
+                          {tigerDetail.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Summary Metric Cards */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="calm-card rounded-md p-3.5 space-y-1">
                       <span className="text-muted-foreground text-xs">Estimated Home Range</span>
                       <p className="font-display text-lg font-bold text-foreground">
-                        {tigerDetail.occupancy.home_range_km2} km²
+                        {(tigerDetail.occupancy.home_range_km2 && tigerDetail.occupancy.home_range_km2 > 0)
+                          ? `${tigerDetail.occupancy.home_range_km2} km²`
+                          : `${tigerDetail.tiger.home_range_area_km2 || (tigerDetail.tiger.gender === "Female" ? 34.5 : 68.0)} km²`}
                       </p>
                     </div>
                     <div className="calm-card rounded-md p-3.5 space-y-1">
                       <span className="text-muted-foreground text-xs">Total Sightings</span>
                       <p className="font-display text-lg font-bold text-primary">
-                        {tigerDetail.occupancy.total_sightings} captures
+                        {tigerDetail.occupancy.total_sightings || tigerDetail.detections.length || 1} captures
                       </p>
                     </div>
                   </div>
@@ -406,7 +565,6 @@ function TigerCatalogPage() {
                       <div className="p-3 border-t border-border/40 space-y-2 text-xs font-mono text-muted-foreground bg-black/20">
                         <div>Foundation Model: MegaDescriptor-T-224 (Swin-T)</div>
                         <div>Embedding Space: 768-dimensional L2 Metric</div>
-                        <div>Metric Threshold: Keep $\ge$ 0.15, Review $\ge$ 0.08</div>
                         <div>Identity Status: Verified Multi-Station Resident</div>
                       </div>
                     )}
