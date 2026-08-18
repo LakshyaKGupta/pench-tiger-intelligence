@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request, Response, status
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -1190,6 +1190,167 @@ def get_pipeline_sources():
         "sources": list_available_media_sources(),
         "default_staging_path": str(storage.imports_dir),
         "platform": sys.platform,
+    }
+
+
+@app.get("/api/system/volumes")
+def list_volumes():
+    """
+    Enumerate all mounted drives/volumes on the local machine.
+    On macOS: scans /Volumes. On Linux: scans /media + /mnt. On Windows: uses drive letters.
+    Returns each volume with name, mount path, approximate image count, and a likely_sd_card flag.
+    """
+    import shutil
+    volumes = []
+
+    def count_images(path: Path) -> int:
+        try:
+            exts = {".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"}
+            return sum(1 for f in path.rglob("*") if f.suffix in exts and f.is_file())
+        except Exception:
+            return 0
+
+    def volume_info(mount: Path) -> dict:
+        try:
+            total, used, free = shutil.disk_usage(mount)
+            img_count = count_images(mount)
+            name = mount.name
+            is_sd = (
+                "DCIM" in [p.name for p in mount.iterdir() if p.is_dir()]
+                or name.upper().startswith("SD")
+                or name.upper().startswith("CANON")
+                or name.upper().startswith("BUSHNELL")
+                or name.upper().startswith("CAMERA")
+                or img_count > 0
+            )
+            return {
+                "name": name,
+                "path": str(mount),
+                "total_gb": round(total / 1e9, 1),
+                "free_gb": round(free / 1e9, 1),
+                "image_count": img_count,
+                "likely_sd_card": is_sd,
+            }
+        except Exception:
+            return None
+
+    if sys.platform == "darwin":
+        base = Path("/Volumes")
+        if base.exists():
+            for v in base.iterdir():
+                if v.is_dir() and v.name != "Macintosh HD":
+                    info = volume_info(v)
+                    if info:
+                        volumes.append(info)
+    elif sys.platform.startswith("linux"):
+        for base in [Path("/media"), Path("/mnt")]:
+            if base.exists():
+                for user_dir in base.iterdir():
+                    if user_dir.is_dir():
+                        for v in user_dir.iterdir():
+                            if v.is_dir():
+                                info = volume_info(v)
+                                if info:
+                                    volumes.append(info)
+    elif sys.platform == "win32":
+        import string
+        for letter in string.ascii_uppercase:
+            drive = Path(f"{letter}:\\")
+            if drive.exists():
+                info = volume_info(drive)
+                if info:
+                    volumes.append(info)
+
+    # Always include the local staging/import directory as a fallback option
+    staging = storage.imports_dir
+    staging.mkdir(parents=True, exist_ok=True)
+    volumes.append({
+        "name": "Local Staging (imports/)",
+        "path": str(staging),
+        "total_gb": None,
+        "free_gb": None,
+        "image_count": count_images(staging),
+        "likely_sd_card": False,
+    })
+
+    return {"volumes": volumes, "platform": sys.platform}
+
+
+@app.post("/api/ingest/upload")
+async def upload_and_ingest(
+    bg_tasks: BackgroundTasks,
+    files: List[UploadFile] = File(default=[]),
+    station_id: Optional[str] = None,
+    dry_run: bool = False,
+):
+    """
+    Accept multipart file upload (images from a browser folder picker).
+    Saves to a timestamped staging directory, extracts EXIF preview metadata,
+    then triggers the background ingestion pipeline.
+    """
+    from app.ingestion.metadata import extract_metadata
+
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided.")
+
+    # Create timestamped staging dir
+    batch_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    staging_dir = storage.imports_dir / f"upload_{batch_id}"
+    staging_dir.mkdir(parents=True, exist_ok=True)
+
+    saved_paths = []
+    exif_previews = []
+    errors = []
+
+    IMG_EXTS = {".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"}
+    for upload in files:
+        if Path(upload.filename).suffix not in IMG_EXTS:
+            errors.append(f"{upload.filename}: unsupported format")
+            continue
+        dest = staging_dir / Path(upload.filename).name
+        try:
+            content = await upload.read()
+            dest.write_bytes(content)
+            saved_paths.append(dest)
+
+            # EXIF preview
+            meta = extract_metadata(dest, station_id or "CAM_FIELD_01")
+            exif_previews.append({
+                "filename": upload.filename,
+                "timestamp": meta["timestamp"],
+                "camera_model": meta["camera_model"],
+                "latitude": meta["latitude"],
+                "longitude": meta["longitude"],
+                "quality_flags": meta["quality_flags"],
+                "size_kb": round(len(content) / 1024, 1),
+            })
+        except Exception as e:
+            errors.append(f"{upload.filename}: {e}")
+
+    if not saved_paths:
+        raise HTTPException(status_code=400, detail=f"No valid images saved. Errors: {errors[:5]}")
+
+    # Kick off background ingestion
+    job_id = f"UPLOAD-{batch_id}"
+    pipeline_jobs[job_id] = {
+        "run_id": job_id,
+        "source_type": "UPLOAD",
+        "source_path": str(staging_dir),
+        "status": "PENDING",
+        "images_discovered": len(saved_paths),
+        "created_at": datetime.now().isoformat(),
+        "dry_run": dry_run,
+    }
+    bg_tasks.add_task(_run_pipeline_background, job_id, str(staging_dir), dry_run)
+
+    return {
+        "job_id": job_id,
+        "status": "PENDING",
+        "staging_dir": str(staging_dir),
+        "files_accepted": len(saved_paths),
+        "files_rejected": len(errors),
+        "errors": errors[:10],
+        "exif_previews": exif_previews,
     }
 
 

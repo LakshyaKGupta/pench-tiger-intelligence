@@ -20,88 +20,27 @@ type Tiger = {
   trail: [number, number][];
 };
 
-const tigers: Tiger[] = [
-  {
-    id: "PT-017",
-    lat: 21.82,
-    lng: 79.28,
-    station: "CAM-04",
-    confidence: "96%",
-    trend: "Normal",
-    trendColor: "#34d399",
-    color: "#f59e0b",
-    trail: [
-      [21.795, 79.24], [21.803, 79.255], [21.811, 79.261],
-      [21.818, 79.272], [21.82, 79.28], [21.824, 79.291],
-      [21.829, 79.299],
-    ],
-  },
-  {
-    id: "PT-024",
-    lat: 21.73,
-    lng: 79.41,
-    station: "CAM-11",
-    confidence: "92%",
-    trend: "New station",
-    trendColor: "#fbbf24",
-    color: "#60a5fa",
-    trail: [
-      [21.755, 79.38], [21.748, 79.39], [21.742, 79.397],
-      [21.736, 79.403], [21.73, 79.41], [21.722, 79.415],
-      [21.716, 79.42],
-    ],
-  },
-  {
-    id: "PT-009",
-    lat: 21.68,
-    lng: 79.31,
-    station: "CAM-27",
-    confidence: "89%",
-    trend: "Absent 14d",
-    trendColor: "#f87171",
-    color: "#a78bfa",
-    trail: [
-      [21.71, 79.27], [21.703, 79.282], [21.696, 79.291],
-      [21.69, 79.302], [21.684, 79.308], [21.68, 79.31],
-    ],
-  },
-  {
-    id: "PT-031",
-    lat: 21.79,
-    lng: 79.46,
-    station: "CAM-19",
-    confidence: "94%",
-    trend: "Normal",
-    trendColor: "#34d399",
-    color: "#fb923c",
-    trail: [
-      [21.77, 79.43], [21.775, 79.438], [21.781, 79.447],
-      [21.786, 79.454], [21.79, 79.46], [21.793, 79.469],
-    ],
-  },
+// Real-data colours for up to 8 tigers
+const TIGER_COLORS: string[] = ["#f59e0b","#60a5fa","#a78bfa","#fb923c","#34d399","#f87171","#e879f9","#38bdf8"];
+
+// Demo fallback — shown before any ingestion has run
+const DEMO_TIGERS: Tiger[] = [
+  { id:"PT-017", lat:21.82, lng:79.28, station:"CAM-04", confidence:"96%", trend:"Normal", trendColor:"#34d399", color:TIGER_COLORS[0]!, trail:[[21.795,79.24],[21.803,79.255],[21.811,79.261],[21.818,79.272],[21.82,79.28],[21.824,79.291],[21.829,79.299]] },
+  { id:"PT-024", lat:21.73, lng:79.41, station:"CAM-11", confidence:"92%", trend:"New station", trendColor:"#fbbf24", color:TIGER_COLORS[1]!, trail:[[21.755,79.38],[21.748,79.39],[21.742,79.397],[21.736,79.403],[21.73,79.41],[21.722,79.415],[21.716,79.42]] },
+  { id:"PT-009", lat:21.68, lng:79.31, station:"CAM-27", confidence:"89%", trend:"Absent 14d", trendColor:"#f87171", color:TIGER_COLORS[2]!, trail:[[21.71,79.27],[21.703,79.282],[21.696,79.291],[21.69,79.302],[21.684,79.308],[21.68,79.31]] },
+  { id:"PT-031", lat:21.79, lng:79.46, station:"CAM-19", confidence:"94%", trend:"Normal", trendColor:"#34d399", color:TIGER_COLORS[3]!, trail:[[21.77,79.43],[21.775,79.438],[21.781,79.447],[21.786,79.454],[21.79,79.46],[21.793,79.469]] },
 ];
 
-const cameraStations: { id: string; lat: number; lng: number }[] = [
-  { id: "CAM-01", lat: 21.85, lng: 79.22 },
-  { id: "CAM-04", lat: 21.82, lng: 79.28 },
-  { id: "CAM-07", lat: 21.80, lng: 79.35 },
-  { id: "CAM-11", lat: 21.73, lng: 79.41 },
-  { id: "CAM-14", lat: 21.76, lng: 79.25 },
-  { id: "CAM-19", lat: 21.79, lng: 79.46 },
-  { id: "CAM-23", lat: 21.70, lng: 79.38 },
-  { id: "CAM-27", lat: 21.68, lng: 79.31 },
-  { id: "CAM-31", lat: 21.72, lng: 79.48 },
-  { id: "CAM-33", lat: 21.86, lng: 79.42 },
-  { id: "CAM-36", lat: 21.65, lng: 79.44 },
-  { id: "CAM-39", lat: 21.88, lng: 79.33 },
+const DEMO_STATIONS = [
+  { id:"CAM-01", lat:21.85, lng:79.22 }, { id:"CAM-04", lat:21.82, lng:79.28 },
+  { id:"CAM-07", lat:21.80, lng:79.35 }, { id:"CAM-11", lat:21.73, lng:79.41 },
+  { id:"CAM-14", lat:21.76, lng:79.25 }, { id:"CAM-19", lat:21.79, lng:79.46 },
+  { id:"CAM-23", lat:21.70, lng:79.38 }, { id:"CAM-27", lat:21.68, lng:79.31 },
+  { id:"CAM-31", lat:21.72, lng:79.48 }, { id:"CAM-33", lat:21.86, lng:79.42 },
+  { id:"CAM-36", lat:21.65, lng:79.44 }, { id:"CAM-39", lat:21.88, lng:79.33 },
 ];
 
-const stats = [
-  { icon: Camera, label: "Active Stations", value: "12" },
-  { icon: Activity, label: "Tigers Tracked", value: "4" },
-  { icon: TrendingUp, label: "Avg Confidence", value: "92.8%" },
-  { icon: AlertTriangle, label: "Active Alerts", value: "1" },
-];
+const API = "http://127.0.0.1:8000";
 
 export function WildlifeMap() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -110,8 +49,94 @@ export function WildlifeMap() {
   const [activeT, setActiveT] = useState<Tiger | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
+  // Real data (from backend) or demo fallback
+  const [tigers, setTigers] = useState<Tiger[]>(DEMO_TIGERS);
+  const [cameraStations, setCameraStations] = useState(DEMO_STATIONS);
+  const [isDemo, setIsDemo] = useState(true);
+  const [stats, setStats] = useState([
+    { icon: Camera, label: "Active Stations", value: "12" },
+    { icon: Activity, label: "Tigers Tracked", value: "4" },
+    { icon: TrendingUp, label: "Avg Confidence", value: "—" },
+    { icon: AlertTriangle, label: "Active Alerts", value: "0" },
+  ]);
+
+  // Fetch real data from backend
   useEffect(() => {
-    if (!mapRef.current || leafletRef.current) return;
+    async function fetchRealData() {
+      try {
+        const [tigersRes, movRes, stnRes, alertsRes] = await Promise.all([
+          fetch(`${API}/api/tigers`).then(r => r.json()),
+          fetch(`${API}/api/movement`).then(r => r.json()),
+          fetch(`${API}/api/stations`).then(r => r.json()),
+          fetch(`${API}/api/alerts?active_only=true`).then(r => r.json()).catch(() => []),
+        ]);
+
+        const tigerList: any[] = Array.isArray(tigersRes) ? tigersRes : (tigersRes.tigers || []);
+        const movement: any[] = Array.isArray(movRes) ? movRes : (movRes.records || []);
+        const stations: any[] = Array.isArray(stnRes) ? stnRes : (stnRes.stations || []);
+        const alerts: any[] = Array.isArray(alertsRes) ? alertsRes : (alertsRes.alerts || []);
+
+        if (tigerList.length > 0) {
+          // Build tiger objects from real data
+          const builtTigers: Tiger[] = tigerList.slice(0, 8).map((t, i) => {
+            const tid = t.tiger_id;
+            const moves = movement.filter(m => m.tiger_id === tid).sort((a, b) => a.timestamp?.localeCompare(b.timestamp));
+            const trail: [number, number][] = moves
+              .filter(m => m.latitude && m.longitude)
+              .map(m => [m.latitude as number, m.longitude as number]);
+            const lastMove = moves[moves.length - 1];
+            const lat = lastMove?.latitude ?? 21.77;
+            const lng = lastMove?.longitude ?? 79.35;
+            const daysSince = lastMove ? Math.floor((Date.now() - new Date(lastMove.timestamp).getTime()) / 86400000) : 0;
+            const trend = daysSince > 7 ? `Absent ${daysSince}d` : daysSince === 0 ? "Today" : `${daysSince}d ago`;
+            const trendColor = daysSince > 14 ? "#f87171" : daysSince > 7 ? "#fbbf24" : "#34d399";
+            return {
+              id: tid, lat, lng,
+              station: lastMove?.station_id ?? "—",
+              confidence: t.best_reid_confidence ? `${Math.round(t.best_reid_confidence * 100)}%` : "—",
+              trend, trendColor,
+              color: TIGER_COLORS[i % TIGER_COLORS.length] ?? "#f59e0b",
+              trail: trail.length >= 2 ? trail : [[lat, lng] as [number, number]],
+            };
+          });
+          setTigers(builtTigers);
+          setIsDemo(false);
+
+          // Real stations
+          if (stations.length > 0) {
+            setCameraStations(stations.filter(s => s.latitude && s.longitude).map(s => ({
+              id: s.station_id, lat: s.latitude, lng: s.longitude,
+            })));
+          }
+
+          // Real stats
+          const avgConf = tigerList.filter(t => t.best_reid_confidence).reduce((acc, t, _, arr) => acc + t.best_reid_confidence / arr.length, 0);
+          setStats([
+            { icon: Camera, label: "Active Stations", value: String(stations.filter(s => s.active_from).length || stations.length) },
+            { icon: Activity, label: "Tigers Tracked", value: String(tigerList.length) },
+            { icon: TrendingUp, label: "Avg Confidence", value: avgConf > 0 ? `${Math.round(avgConf * 100)}%` : "—" },
+            { icon: AlertTriangle, label: "Active Alerts", value: String(alerts.length) },
+          ]);
+        }
+      } catch {
+        // Backend offline or empty DB — keep demo data
+      }
+    }
+    fetchRealData();
+    // Re-fetch every 60s (after new ingestion run completes)
+    const t = setInterval(fetchRealData, 60_000);
+    return () => clearInterval(t);
+  }, []);
+
+  // ── Leaflet map initialization (re-run when real data arrives) ──────────────
+  useEffect(() => {
+    // Clean up previous map instance when data changes
+    if (leafletRef.current) {
+      leafletRef.current.remove();
+      leafletRef.current = null;
+      setMapReady(false);
+    }
+    if (!mapRef.current) return;
 
     // Dynamically load leaflet CSS
     const link = document.createElement("link");
@@ -162,8 +187,8 @@ export function WildlifeMap() {
         // Arrowhead at latest position (last segment)
         const len = tiger.trail.length;
         if (len >= 2) {
-          const from = tiger.trail[len - 2];
-          const to = tiger.trail[len - 1];
+          const from = tiger.trail[len - 2]!;
+          const to = tiger.trail[len - 1]!;
           const angle = Math.atan2(
             to[1] - from[1],
             to[0] - from[0]
@@ -181,7 +206,8 @@ export function WildlifeMap() {
             iconSize: [14, 13],
             iconAnchor: [7, 6],
           });
-          Leaflet.marker([to[0], to[1]], { icon: arrowIcon }).addTo(map);
+          const to2 = tiger.trail[len - 1]!;
+          Leaflet.marker([to2[0], to2[1]], { icon: arrowIcon }).addTo(map);
         }
 
         // Tiger marker (pulsing dot)
@@ -201,37 +227,37 @@ export function WildlifeMap() {
 
         // Label tooltip
         marker.bindTooltip(
-          `<div class="tt-map-tooltip">
-             <span class="tt-id">${tiger.id}</span>
-             <span class="tt-chip">${tiger.station}</span>
-             <span class="tt-conf" style="color:${tiger.trendColor}">● ${tiger.trend}</span>
-             <span class="tt-chip">Confidence: ${tiger.confidence}</span>
-           </div>`,
-          {
-            permanent: false,
-            direction: "top",
-            offset: [0, -14],
-            className: "tt-tooltip-wrap",
-          }
+          `<div style="background:#1a1a2e;border:1px solid ${tiger.color}44;padding:6px 10px;border-radius:6px;font-family:monospace;font-size:12px;color:#e2e8f0;">
+            <strong style="color:${tiger.color}">${tiger.id}</strong><br/>
+            📍 ${tiger.station}<br/>
+            🎯 ${tiger.confidence}<br/>
+            📅 ${tiger.trend}
+          </div>`,
+          { permanent: false, direction: "top", opacity: 1, className: "" }
         );
-
-        markersRef.current.push({ marker, tiger });
+        marker.on("click", () => setActiveT(tiger));
       });
 
       // Camera station markers
-      cameraStations.forEach((cam) => {
-        const camIcon = Leaflet.divIcon({
+      cameraStations.forEach((stn) => {
+        const stationIcon = Leaflet.divIcon({
           className: "",
-          html: `<div class="tt-cam-dot"></div>`,
+          html: `<div style="
+            width:10px;height:10px;
+            background:#64748b;
+            border:1.5px solid #94a3b8;
+            border-radius:3px;
+            opacity:0.8;
+          "></div>`,
           iconSize: [10, 10],
           iconAnchor: [5, 5],
         });
-        Leaflet.marker([cam.lat, cam.lng], { icon: camIcon })
-          .bindTooltip(cam.id, {
-            direction: "top",
-            className: "tt-tooltip-wrap tt-cam-tip",
-          })
-          .addTo(map);
+        Leaflet.marker([stn.lat, stn.lng], { icon: stationIcon })
+          .addTo(map)
+          .bindTooltip(
+            `<div style="background:#1e293b;padding:4px 8px;border-radius:4px;font-size:11px;color:#94a3b8;font-family:monospace">${stn.id}</div>`,
+            { permanent: false, direction: "top", opacity: 1, className: "" }
+          );
       });
 
       leafletRef.current = map;
@@ -247,7 +273,7 @@ export function WildlifeMap() {
         leafletRef.current = null;
       }
     };
-  }, []);
+  }, [tigers, cameraStations]);
 
   return (
     <section
@@ -395,10 +421,18 @@ export function WildlifeMap() {
                 animate={{ opacity: [1, 0.3, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              <span className="data-chip text-muted-foreground">
-                LIVE · Pench Tiger Reserve — Core &amp; Buffer Zone
-              </span>
-              <span className="ml-auto text-[10px] text-muted-foreground/60">
+              <span className="font-mono text-xs text-muted-foreground">PENCH TIGER RESERVE · REAL TERRAIN</span>
+              {isDemo && (
+                <span className="ml-auto rounded-full bg-amber/15 border border-amber/30 px-2 py-0.5 text-[10px] font-semibold text-amber">
+                  Demo — ingest SD card to see real data
+                </span>
+              )}
+              {!isDemo && (
+                <span className="ml-auto rounded-full bg-signal/15 border border-signal/30 px-2 py-0.5 text-[10px] font-semibold text-signal">
+                  ✓ Live DB data
+                </span>
+              )}
+              <span className="font-mono text-[10px] text-muted-foreground/60 ml-auto">
                 21.77°N 79.35°E
               </span>
             </div>
