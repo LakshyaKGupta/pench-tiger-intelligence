@@ -27,6 +27,14 @@ class TigerCandidate:
     ensemble_confidence: float
     species_label: str
 
+    @property
+    def species_name(self) -> str:
+        return self.species_label
+
+    @property
+    def species_confidence(self) -> float:
+        return self.ensemble_confidence
+
 
 class SpeciesClassifier:
     """

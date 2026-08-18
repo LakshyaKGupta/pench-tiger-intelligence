@@ -256,6 +256,8 @@ class TigerDatabase:
                 )
             )
 
+    register_camera_station = upsert_station
+
     def get_station(self, station_id: str) -> Optional[dict]:
         with self._get_connection() as conn:
             row = conn.execute("SELECT * FROM camera_stations WHERE station_id = ?", (station_id,)).fetchone()
@@ -265,6 +267,18 @@ class TigerDatabase:
         with self._get_connection() as conn:
             rows = conn.execute("SELECT * FROM camera_stations ORDER BY station_id").fetchall()
             return [dict(r) for r in rows]
+
+    def delete_station(self, station_id: str) -> bool:
+        """Decommission and remove a camera station if no detections depend on it."""
+        with self._get_connection() as conn:
+            # Check if there are detections associated
+            det_count = conn.execute("SELECT COUNT(*) FROM detections WHERE station_id = ?", (station_id,)).fetchone()[0]
+            if det_count > 0:
+                # Mark as inactive rather than deleting historical reference
+                conn.execute("UPDATE camera_stations SET active_to = datetime('now', 'utc') WHERE station_id = ?", (station_id,))
+                return False
+            cursor = conn.execute("DELETE FROM camera_stations WHERE station_id = ?", (station_id,))
+            return cursor.rowcount > 0
 
     # ── Known Individual Tigers Master Catalog ─────────────────────────────────
 

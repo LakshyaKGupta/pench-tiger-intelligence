@@ -147,6 +147,31 @@ class PreScanRequest(BaseModel):
     source_path: str = Field(..., description="Path to SD card directory or local folder to pre-scan")
 
 
+class StationCreateRequest(BaseModel):
+    station_id: str = Field(..., description="Unique Station identifier e.g. C17 or STN-01")
+    camera_model: str = Field("Reconyx HyperFire 2", description="Camera hardware model")
+    latitude: float = Field(..., ge=-90.0, le=90.0, description="GPS Latitude")
+    longitude: float = Field(..., ge=-180.0, le=180.0, description="GPS Longitude")
+    active_from: Optional[str] = Field(None, description="ISO deployment start date e.g. 2026-01-01")
+    active_to: Optional[str] = Field(None, description="ISO deployment end date if decommissioned")
+    survey_id: str = Field("Pench_2026_Cycle1", description="Survey block or cycle identifier")
+    zone: str = Field("Core", description="Core, Buffer, Corridor, or Fringe")
+    distance_to_village_km: float = Field(5.0, ge=0.0, description="Distance to nearest human settlement in km")
+    distance_to_buffer_km: float = Field(10.0, ge=0.0, description="Distance to reserve buffer boundary in km")
+
+
+class StationUpdateRequest(BaseModel):
+    camera_model: Optional[str] = None
+    latitude: Optional[float] = Field(None, ge=-90.0, le=90.0)
+    longitude: Optional[float] = Field(None, ge=-180.0, le=180.0)
+    active_from: Optional[str] = None
+    active_to: Optional[str] = None
+    survey_id: Optional[str] = None
+    zone: Optional[str] = None
+    distance_to_village_km: Optional[float] = Field(None, ge=0.0)
+    distance_to_buffer_km: Optional[float] = Field(None, ge=0.0)
+
+
 # ── System & Health Endpoints ──────────────────────────────────────────────────
 
 @app.get("/api/health")
@@ -601,7 +626,101 @@ def get_station_detail(station_id: str):
     }
 
 
-# ── Movement Intelligence & GIS Map ───────────────────────────────────────────
+@app.post("/api/stations", status_code=201)
+def create_camera_station(req: StationCreateRequest):
+    """
+    Register a newly deployed physical camera trap station with GPS coordinates,
+    hardware model, reserve zone, and village boundary metrics.
+    """
+    existing = db.get_station(req.station_id)
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Camera station '{req.station_id}' already registered in reserve grid."
+        )
+
+    active_from = req.active_from or datetime.now().strftime("%Y-%m-%d")
+    db.register_camera_station(
+        station_id=req.station_id.strip().upper(),
+        latitude=req.latitude,
+        longitude=req.longitude,
+        active_from=active_from,
+        active_to=req.active_to,
+        survey_id=req.survey_id,
+        camera_model=req.camera_model,
+        zone=req.zone,
+        distance_to_village_km=req.distance_to_village_km,
+        distance_to_buffer_km=req.distance_to_buffer_km,
+    )
+
+    db.log_audit(
+        entity_type="camera_station",
+        entity_id=req.station_id.strip().upper(),
+        action="station_registered",
+        actor="FIELD_OFFICER",
+        details=f"Deployed at ({req.latitude:.4f}, {req.longitude:.4f}) in zone {req.zone}",
+    )
+
+    created = db.get_station(req.station_id.strip().upper())
+    return {
+        "status": "success",
+        "message": f"Camera station '{req.station_id.strip().upper()}' registered successfully.",
+        "station": created,
+    }
+
+
+@app.put("/api/stations/{station_id}")
+def update_camera_station(station_id: str, req: StationUpdateRequest):
+    """Update metadata, GPS coordinates, or active status of an existing camera station."""
+    existing = db.get_station(station_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Camera station '{station_id}' not found")
+
+    lat = req.latitude if req.latitude is not None else existing["latitude"]
+    lon = req.longitude if req.longitude is not None else existing["longitude"]
+    model = req.camera_model if req.camera_model is not None else existing["camera_model"]
+    active_from = req.active_from if req.active_from is not None else existing["active_from"]
+    active_to = req.active_to if req.active_to is not None else existing["active_to"]
+    survey = req.survey_id if req.survey_id is not None else existing["survey_id"]
+    zone = req.zone if req.zone is not None else existing["zone"]
+    d_vil = req.distance_to_village_km if req.distance_to_village_km is not None else existing["distance_to_village_km"]
+    d_buf = req.distance_to_buffer_km if req.distance_to_buffer_km is not None else existing["distance_to_buffer_km"]
+
+    db.register_camera_station(
+        station_id=station_id,
+        latitude=lat,
+        longitude=lon,
+        active_from=active_from,
+        active_to=active_to,
+        survey_id=survey,
+        camera_model=model,
+        zone=zone,
+        distance_to_village_km=d_vil,
+        distance_to_buffer_km=d_buf,
+    )
+
+    return {
+        "status": "success",
+        "message": f"Camera station '{station_id}' updated.",
+        "station": db.get_station(station_id),
+    }
+
+
+@app.delete("/api/stations/{station_id}")
+def delete_camera_station(station_id: str):
+    """Decommission or delete a camera station."""
+    existing = db.get_station(station_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Camera station '{station_id}' not found")
+
+    was_deleted = db.delete_station(station_id)
+    if was_deleted:
+        msg = f"Camera station '{station_id}' removed."
+    else:
+        msg = f"Camera station '{station_id}' has historical detections and was archived/decommissioned."
+
+    return {"status": "success", "message": msg, "fully_deleted": was_deleted}
+
 
 @app.get("/api/movement")
 def get_movement_records(tiger_id: Optional[str] = None):
@@ -885,11 +1004,13 @@ def _resolve_canonical_file(filepath: str) -> Path:
             storage.crops_dir / Path(clean).name,
             storage.media_dir / Path(clean).name,
             Path(clean),
+            Path("/" + clean.lstrip("/")),
         ]
         allow_workspaces = False
     else:
         candidates = [
             Path(clean),
+            Path("/" + clean.lstrip("/")),
             storage.root / clean,
             storage.crops_dir / Path(clean).name,
             storage.media_dir / Path(clean).name,

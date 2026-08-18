@@ -81,6 +81,24 @@ export const intelligenceService = {
         alerts: AlertRecord[];
       }
     >(`/stations/${stationId}`),
+  createStation: (stationData: Partial<CameraStation>) =>
+    api.post<{ status: string; message: string; station: CameraStation }>("/stations", stationData),
+  updateStation: (stationId: string, stationData: Partial<CameraStation>) =>
+    api.put<{ status: string; message: string; station: CameraStation }>(`/stations/${stationId}`, stationData),
+  deleteStation: (stationId: string) =>
+    api.delete<{ status: string; message: string; fully_deleted: boolean }>(`/stations/${stationId}`),
+
+  // Officer Accounts & Workstation Access (Offline Auth)
+  getAuthStatus: () =>
+    api.get<{ configured: boolean; officer_count: number; workstation_id?: string; reserve_name?: string }>("/auth/status"),
+  listOfficers: () =>
+    api.get<{ officers: Array<{ id: string; officer_id: string; display_name: string; role: string; is_active: number; created_at: string; last_login_at?: string }> }>("/auth/officers"),
+  createOfficer: (data: { officer_id: string; display_name: string; role: string; password: string }) =>
+    api.post<{ id: string; officer_id: string; role: string; message: string }>("/auth/officers", data),
+  resetOfficerPassword: (officerId: string, data: { new_password: string }) =>
+    api.patch<{ message: string }>(`/auth/officers/${officerId}/reset`, data),
+  deactivateOfficer: (officerId: string) =>
+    api.patch<{ message: string }>(`/auth/officers/${officerId}/deactivate`),
 
   // Movement & Spatial
   getMovement: (tigerId?: string) => api.get<MovementRecord[]>("/movement", tigerId ? { tiger_id: tigerId } : undefined),
