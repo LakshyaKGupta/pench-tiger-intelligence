@@ -137,14 +137,60 @@ function CameraIngestionPage() {
       es.onmessage = (ev) => {
         try {
           const d = JSON.parse(ev.data);
-          if (d.type === "STAGE_CHANGE") { setActiveStage(d.stage); setStageProgress(Math.round(d.progress * 100)); setStageMessage(d.message || ""); }
-          else if (d.type === "RUN_COMPLETED") { setActiveStage("COMPLETED"); setStageProgress(100); setIsProcessing(false); setStep(4); fetchRuns(); toast.success("Ingestion complete!"); }
-          else if (d.type === "RUN_FAILED") { setActiveStage("FAILED"); setIsProcessing(false); fetchRuns(); toast.error(`Failed: ${d.error}`); }
+          if (d.type === "STAGE_CHANGE") {
+            setActiveStage(d.stage);
+            setStageProgress(Math.round(d.progress * 100));
+            setStageMessage(d.message || "");
+          } else if (d.type === "RUN_COMPLETED") {
+            setActiveStage("COMPLETED");
+            setStageProgress(100);
+            setIsProcessing(false);
+            if (d.summary) {
+              const s = d.summary;
+              const totalImgs =
+                s.total_images_processed ??
+                s.total_images_scanned ??
+                s.total_images ??
+                pickedFiles.length ??
+                0;
+              const tigersId =
+                s.tigers_identified ??
+                s.individual_tigers_sighted ??
+                s.tiger_sightings_count ??
+                s.tigers_detected ??
+                0;
+              const quarantined =
+                s.quarantined_images ??
+                ((s.corrupt_quarantined ?? s.corrupt_count ?? 0) +
+                  (s.blanks_quarantined ?? s.blank_count ?? 0) +
+                  (s.non_target_wildlife ?? 0));
+              const alertsCount =
+                s.alerts_generated ?? (s.alerts ? s.alerts.length : 0);
+
+              setCurrentJob({
+                run_id: d.job_id || s.job_id || "BATCH-COMPLETE",
+                status: "COMPLETED",
+                total_images: totalImgs,
+                individual_tigers_sighted: tigersId,
+                quarantined_images: quarantined,
+                alerts_generated: alertsCount,
+                deliverables: s.deliverables || [],
+              });
+            }
+            setStep(4);
+            fetchRuns();
+            toast.success("Ingestion complete!");
+          } else if (d.type === "RUN_FAILED") {
+            setActiveStage("FAILED");
+            setIsProcessing(false);
+            fetchRuns();
+            toast.error(`Failed: ${d.error}`);
+          }
         } catch {}
       };
     } catch {}
     return () => es?.close();
-  }, [fetchRuns]);
+  }, [fetchRuns, pickedFiles.length]);
 
   // ── Folder picker ─────────────────────────────────────────────────────────
   async function openFolderPicker() {
@@ -501,19 +547,51 @@ function CameraIngestionPage() {
             <div className="grid size-10 place-items-center rounded-full bg-signal/15 border border-signal/30 text-signal"><CheckCircle2 className="size-6" /></div>
             <div><h2 className="font-display text-base font-bold text-foreground">04 — Ingestion Complete</h2><p className="text-xs text-muted-foreground">All images analyzed · Database updated · Map refreshed</p></div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-            {[
-              { label: "Images Processed", value: currentJob?.total_images ?? "—", color: "text-foreground" },
-              { label: "Tigers Identified", value: currentJob?.individual_tigers_sighted ?? "—", color: "text-primary" },
-              { label: "Quarantined", value: currentJob?.quarantined_images ?? "—", color: "text-amber" },
-              { label: "Alerts Raised", value: currentJob?.alerts_generated ?? "—", color: "text-destructive" },
-            ].map(item => (
-              <div key={item.label} className="rounded-md bg-secondary/30 border border-border/40 p-4 space-y-1">
-                <span className="text-[11px] text-muted-foreground block">{item.label}</span>
-                <p className={`font-display text-2xl font-bold ${item.color}`}>{item.value}</p>
+          {/* ── STEP 4 STATS ── */}
+          {(() => {
+            const latestRun = pastRuns[0];
+            const processedCount =
+              (currentJob?.total_images && currentJob.total_images > 0)
+                ? currentJob.total_images
+                : (latestRun?.images_processed || latestRun?.images_discovered || pickedFiles.length || 0);
+
+            const tigersCount =
+              (currentJob?.individual_tigers_sighted !== undefined && currentJob.individual_tigers_sighted > 0)
+                ? currentJob.individual_tigers_sighted
+                : (latestRun?.tigers_detected !== undefined && latestRun.tigers_detected > 0)
+                ? latestRun.tigers_detected
+                : (currentJob?.individual_tigers_sighted ?? 0);
+
+            const quarantinedCount =
+              (currentJob?.quarantined_images !== undefined && currentJob.quarantined_images > 0)
+                ? currentJob.quarantined_images
+                : (latestRun?.corrupt_files !== undefined)
+                ? latestRun.corrupt_files
+                : (currentJob?.quarantined_images ?? 0);
+
+            const alertsCount =
+              (currentJob?.alerts_generated !== undefined && currentJob.alerts_generated > 0)
+                ? currentJob.alerts_generated
+                : (latestRun?.alerts_generated !== undefined)
+                ? latestRun.alerts_generated
+                : (currentJob?.alerts_generated ?? 0);
+
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                {[
+                  { label: "Images Processed", value: processedCount, color: "text-foreground" },
+                  { label: "Tigers Identified", value: tigersCount, color: "text-primary" },
+                  { label: "Quarantined", value: quarantinedCount, color: "text-amber" },
+                  { label: "Alerts Raised", value: alertsCount, color: "text-destructive" },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-md bg-secondary/30 border border-border/40 p-4 space-y-1">
+                    <span className="text-[11px] text-muted-foreground block">{item.label}</span>
+                    <p className={`font-display text-2xl font-bold ${item.color}`}>{item.value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
           {exifPreviews.length > 0 && (
             <div className="rounded-md bg-secondary/20 border border-border/40 p-4 space-y-2">
               <p className="text-xs font-semibold text-foreground flex items-center gap-1.5"><MapPin className="size-3.5 text-primary" /> Location &amp; Date Summary</p>

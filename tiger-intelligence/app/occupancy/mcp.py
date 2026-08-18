@@ -114,8 +114,18 @@ def calculate_tiger_home_range(sightings: List[Dict]) -> Dict:
             "mcp_polygon": [],
         }
 
-    points = [(float(s["latitude"]), float(s["longitude"])) for s in sightings if s.get("latitude") and s.get("longitude")]
-    unique_stations = sorted(list(set(s["station_id"] for s in sightings if s.get("station_id"))))
+    points = []
+    unique_stations = []
+    for s in sightings:
+        if isinstance(s, dict):
+            if s.get("latitude") is not None and s.get("longitude") is not None:
+                points.append((float(s["latitude"]), float(s["longitude"])))
+            if s.get("station_id"):
+                unique_stations.append(s["station_id"])
+        elif isinstance(s, (list, tuple)) and len(s) >= 2:
+            points.append((float(s[0]), float(s[1])))
+
+    unique_stations = sorted(list(set(unique_stations)))
 
     if not points:
         return {

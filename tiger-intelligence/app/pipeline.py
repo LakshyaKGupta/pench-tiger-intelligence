@@ -688,18 +688,28 @@ class TigerIntelligencePipeline:
         all_generated_alerts.extend(absence_alerts)
 
         elapsed = time.time() - start_time
+        quarantined_total = corrupt_count + len(blank_candidates) + len(human_candidates) + len(non_target_records)
+        unique_tigers_sighted = len(set(m["tiger_id"] for m in reid_matches if m.get("tiger_id")))
+
         summary = {
             "version": VERSION,
             "pipeline_timestamp": datetime.now().isoformat(),
             "runtime_seconds": round(elapsed, 2),
             "throughput_img_per_sec": round(total_discovered / max(0.01, elapsed), 2),
             "total_images_scanned": total_discovered,
+            "total_images_processed": total_discovered,
             "corrupt_quarantined": corrupt_count,
+            "corrupt_count": corrupt_count,
             "blanks_quarantined": len(blank_candidates),
+            "blank_count": len(blank_candidates),
+            "quarantined_images": quarantined_total,
             "review_flagged": len(review_candidates),
+            "review_required_count": len(review_candidates),
             "humans_protected": len(human_candidates),
             "non_target_wildlife": len(non_target_records),
             "tigers_identified": len(tiger_records),
+            "tiger_sightings_count": len(tiger_records),
+            "individual_tigers_sighted": unique_tigers_sighted or len(tiger_records),
             "unique_individuals": len(self.db.get_all_tigers()),
             "alerts_generated": len(all_generated_alerts),
             "alerts": all_generated_alerts,

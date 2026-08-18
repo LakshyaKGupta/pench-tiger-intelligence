@@ -1376,16 +1376,23 @@ def _run_pipeline_background(job_id: str, source_path: str, dry_run: bool):
         pipeline_jobs[job_id]["summary"] = summary
         pipeline_jobs[job_id]["deliverables_dir"] = str(out_dir)
 
+        images_proc = summary.get("total_images_processed") or summary.get("total_images_scanned") or pipeline_jobs[job_id].get("images_discovered", 0)
+        tigers_det = summary.get("tigers_identified") or summary.get("tiger_sightings_count") or summary.get("individual_tigers_sighted") or 0
+        corrupt_det = summary.get("corrupt_quarantined") or summary.get("corrupt_count") or 0
+        quarantined_det = summary.get("quarantined_images") or (corrupt_det + summary.get("blanks_quarantined", 0) + summary.get("non_target_wildlife", 0))
+        alerts_det = summary.get("alerts_generated") or len(summary.get("alerts", []))
+        review_det = summary.get("review_flagged") or summary.get("review_required_count") or 0
+
         db.update_pipeline_run(
             run_id=job_id,
             status="COMPLETED",
             current_stage="COMPLETED",
-            images_processed=summary.get("total_images_processed", 0),
+            images_processed=images_proc,
             duplicates=summary.get("duplicate_count", 0),
-            corrupt_files=summary.get("corrupt_count", 0),
-            tigers_detected=summary.get("tiger_sightings_count", 0),
-            review_required=summary.get("review_required_count", 0),
-            alerts_generated=len(summary.get("alerts", [])),
+            corrupt_files=corrupt_det,
+            tigers_detected=tigers_det,
+            review_required=review_det,
+            alerts_generated=alerts_det,
             deliverables_dir=str(out_dir),
         )
 
