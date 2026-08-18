@@ -22,19 +22,52 @@ echo "========================================================================"
 mkdir -p "${DIST_DIR}"
 rm -rf "${APP_BUNDLE}" "${STAGING_DIR}" "${DMG_PATH}"
 
-# 1. Build Production Frontend Bundle
-echo "► [1/5] Building Production Frontend..."
+# 1. Build Production Frontend Bundle with node-server preset
+echo "► [1/5] Building Production Frontend with Node Server..."
 cd "${SCRIPT_DIR}/frontend"
-npm run build
+NITRO_PRESET=node-server npm run build
 
-# 2. Compile Python Intelligence Backend Sidecar
-echo "► [2/5] Compiling Python Intelligence Engine..."
+# Generate index.html in public output for Tauri / webview fallback
+CSS_FILE=$(ls .output/public/assets/styles-*.css 2>/dev/null | head -n 1 | xargs -n 1 basename || echo "styles-gfTonbdg.css")
+JS_FILE=$(ls .output/public/assets/index-*.js 2>/dev/null | head -n 1 | xargs -n 1 basename || echo "index-x_4WnlWL.js")
+
+cat <<EOF > .output/public/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TIGERTRACK AI — Pench Tiger Reserve Intelligence Platform</title>
+  <link rel="stylesheet" href="/assets/${CSS_FILE}" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+</head>
+<body style="margin:0;padding:0;background:#090b0e;color:#e1e7ec;font-family:sans-serif;">
+  <div id="root"></div>
+  <script type="module" src="/assets/${JS_FILE}"></script>
+  <script>
+    // Automatic fallback redirect to local server if loaded via webview
+    if (window.location.protocol === 'file:' || window.location.protocol === 'tauri:') {
+      fetch('http://127.0.0.1:3000/dashboard', { mode: 'no-cors' })
+        .then(() => { window.location.href = 'http://127.0.0.1:3000/dashboard'; })
+        .catch(() => {
+          setTimeout(() => { window.location.href = 'http://127.0.0.1:3000/dashboard'; }, 1000);
+        });
+    }
+  </script>
+</body>
+</html>
+EOF
+
+# 2. Check or Compile Python Intelligence Backend Sidecar
+echo "► [2/5] Preparing Python Intelligence Engine Sidecar..."
 cd "${SCRIPT_DIR}/tiger-intelligence"
-if command -v pyinstaller &> /dev/null; then
-    pyinstaller --noconfirm pyinstaller.spec
-    echo "✓ Sidecar compiled in tiger-intelligence/dist/tiger-intelligence-sidecar"
+if [ ! -f "dist/tiger-intelligence-sidecar" ]; then
+    if command -v pyinstaller &> /dev/null; then
+        pyinstaller --noconfirm pyinstaller.spec
+        echo "✓ Sidecar compiled in tiger-intelligence/dist/tiger-intelligence-sidecar"
+    fi
 else
-    echo "⚠️  PyInstaller not found on PATH. Bundling Python source tree directly."
+    echo "✓ Existing compiled sidecar verified in tiger-intelligence/dist/tiger-intelligence-sidecar"
 fi
 
 # 3. Construct macOS Application Bundle Hierarchy
@@ -107,7 +140,7 @@ if [ -f "${SCRIPT_DIR}/tiger-intelligence/dist/tiger-intelligence-sidecar" ]; th
     chmod +x "${APP_BUNDLE}/Contents/MacOS/tiger-intelligence-sidecar"
 fi
 
-# 4. Create App Launcher Executable
+# 4. Create Robust App Launcher Executable (with GUI $PATH discovery)
 echo "► [4/5] Creating Native App Launcher..."
 cat <<'EOF' > "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 #!/usr/bin/env bash
@@ -116,6 +149,17 @@ cat <<'EOF' > "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 # ==============================================================================
 
 set -e
+
+# Detect user environment PATH when opened from Finder GUI
+NVM_NODE_BIN=""
+if [ -d "${HOME}/.nvm/versions/node" ]; then
+    LATEST_NVM=$(ls -d "${HOME}/.nvm/versions/node/"* 2>/dev/null | tail -n 1)
+    if [ -n "${LATEST_NVM}" ] && [ -d "${LATEST_NVM}/bin" ]; then
+        NVM_NODE_BIN="${LATEST_NVM}/bin"
+    fi
+fi
+
+export PATH="/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/Current/bin:/Library/Frameworks/Python.framework/Versions/3.14/bin:/Library/Frameworks/Python.framework/Versions/3.12/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:${NVM_NODE_BIN}:${HOME}/.cargo/bin:${HOME}/.local/bin:${PATH}"
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESOURCES="${DIR}/../Resources"
@@ -130,18 +174,21 @@ mkdir -p "${LOG_DIR}"
 BACKEND_LOG="${LOG_DIR}/backend.log"
 FRONTEND_LOG="${LOG_DIR}/frontend.log"
 
-echo "🐅 Launching TIGERTRACK AI..." > "${BACKEND_LOG}"
+echo "🐅 [$(date '+%Y-%m-%d %H:%M:%S')] Launching TIGERTRACK AI Desktop Services..." > "${BACKEND_LOG}"
+echo "🐅 [$(date '+%Y-%m-%d %H:%M:%S')] Launching TIGERTRACK AI Frontend Server..." > "${FRONTEND_LOG}"
 
 # 1. Start Backend Intelligence Service
 if [ -x "${DIR}/tiger-intelligence-sidecar" ]; then
+    echo "► Starting compiled sidecar binary..." >> "${BACKEND_LOG}"
     "${DIR}/tiger-intelligence-sidecar" >> "${BACKEND_LOG}" 2>&1 &
     BACKEND_PID=$!
 else
+    echo "► Starting python server..." >> "${BACKEND_LOG}"
     python3 "${RESOURCES}/app/api/server.py" >> "${BACKEND_LOG}" 2>&1 &
     BACKEND_PID=$!
 fi
 
-# 2. Start Frontend Service
+# 2. Start Frontend Server
 cd "${RESOURCES}/frontend"
 if [ -f ".output/server/index.mjs" ]; then
     PORT="${FRONTEND_PORT}" node .output/server/index.mjs >> "${FRONTEND_LOG}" 2>&1 &
@@ -173,6 +220,7 @@ done
 # 4. Open Dedicated App Window
 URL="http://127.0.0.1:${FRONTEND_PORT}/dashboard"
 
+# Open in standalone application window mode if Chrome / Brave / Edge exists, else default browser
 if [ -d "/Applications/Google Chrome.app" ]; then
     open -na "Google Chrome" --args "--app=${URL}"
 elif [ -d "/Applications/Brave Browser.app" ]; then
